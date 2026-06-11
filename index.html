@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupraScope</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --void:#02020a;--deep:#04040e;--surface:#09091a;--rim:#111128;
+    --muted:#252548;--text-dim:#484878;--text-mid:#7878b0;--text-bright:#e0e0f0;
+    --fd:'Space Mono',monospace;--fb:'Space Grotesk',sans-serif;
+  }
+  html{scroll-behavior:smooth}
+  body{background:var(--void);color:var(--text-mid);font-family:var(--fb);font-size:16px;line-height:1.7;overflow-x:hidden}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:linear-gradient(to bottom,rgba(2,2,10,.98),transparent)}
+  .nav-logo{font-family:var(--fd);font-size:12px;letter-spacing:.25em;color:var(--text-bright);text-decoration:none}
+  .nav-links{display:flex;gap:36px;list-style:none}
+  .nav-links a{font-size:10px;letter-spacing:.18em;color:var(--text-dim);text-decoration:none;text-transform:uppercase;transition:color .3s}
+  .nav-links a:hover{color:var(--text-bright)}
+  #hero{position:relative;width:100%;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+  #hero-canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+  #hero-canvas:active{cursor:grabbing}
+  .hero-content{position:relative;z-index:2;text-align:center;pointer-events:none}
+  .hero-eyebrow{font-family:var(--fd);font-size:10px;letter-spacing:.4em;color:var(--text-dim);text-transform:uppercase;margin-bottom:28px}
+  .hero-title{font-family:var(--fd);font-size:clamp(52px,9vw,108px);font-weight:700;color:var(--text-bright);letter-spacing:-.02em;line-height:1;margin-bottom:24px}
+  .hero-title span{background:linear-gradient(135deg,#6622ff,#2255ff,#ff4411);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-sub{font-size:clamp(13px,1.7vw,16px);color:var(--text-dim);max-width:460px;margin:0 auto;line-height:1.65;font-weight:300}
+  .hero-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:8px;animation:floatY 3.5s ease-in-out infinite}
+  .hero-hint::after{content:'';width:1px;height:32px;background:linear-gradient(to bottom,var(--muted),transparent)}
+  @keyframes floatY{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+  #simulator{padding:110px 48px;background:var(--deep)}
+  .sec-label{font-family:var(--fd);font-size:10px;letter-spacing:.35em;color:#6622ff;text-transform:uppercase;margin-bottom:12px}
+  .sec-title{font-family:var(--fd);font-size:clamp(22px,3.2vw,36px);color:var(--text-bright);font-weight:700;margin-bottom:12px;line-height:1.2}
+  .sec-body{color:var(--text-dim);max-width:500px;margin-bottom:52px;font-weight:300;font-size:14px}
+  .sim-grid{display:grid;grid-template-columns:1fr 340px;gap:36px;align-items:start;max-width:1160px;margin:0 auto}
+  #sim-wrap{position:relative;aspect-ratio:1;background:var(--void);border:1px solid var(--rim);overflow:hidden;cursor:grab}
+  #sim-wrap:active{cursor:grabbing}
+  #sim-canvas{width:100%;height:100%;display:block}
+  .sim-hud{position:absolute;bottom:0;left:0;right:0;padding:14px 18px;display:flex;justify-content:space-between;align-items:flex-end;background:linear-gradient(to top,rgba(2,2,10,.88),transparent);pointer-events:none}
+  .sim-state-lbl{font-family:var(--fd);font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+  .legend{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+  .leg-row{display:flex;align-items:center;gap:5px;font-family:var(--fd);font-size:8px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .leg-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+  .dials-panel{background:var(--surface);border:1px solid var(--rim);overflow:hidden}
+  .dials-head{padding:14px 22px;border-bottom:1px solid var(--rim);font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase}
+  .dial-row{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--rim);transition:background .2s}
+  .dial-row:last-of-type{border-bottom:none}
+  .dial-row:hover{background:var(--rim)}
+  .dial-idx{font-family:var(--fd);font-size:9px;color:var(--muted);width:14px;flex-shrink:0}
+  .dial-sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .dial-track{flex:1;position:relative;height:1px;background:var(--rim)}
+  .dial-fill{position:absolute;top:0;height:100%}
+  .dial-cmark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1px;height:6px;background:var(--muted);opacity:.4}
+  .dial-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--text-bright);pointer-events:none;box-shadow:0 0 5px currentColor}
+  input[type=range].dial-input{position:absolute;inset:-10px 0;width:100%;opacity:0;cursor:pointer;height:22px}
+  .dial-val{font-family:var(--fd);font-size:9px;width:30px;text-align:right;flex-shrink:0}
+  .dials-foot{padding:12px 22px;border-top:1px solid var(--rim);display:flex;justify-content:space-between;align-items:center}
+  .dials-range{font-family:var(--fd);font-size:9px;letter-spacing:.18em;color:var(--muted)}
+  .btn-reset{font-family:var(--fd);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);background:none;border:1px solid var(--rim);padding:5px 11px;cursor:pointer;transition:all .2s}
+  .btn-reset:hover{border-color:var(--muted);color:var(--text-bright)}
+  .quality-bar{display:flex;gap:0;border-top:1px solid var(--rim);overflow:hidden}
+  .q-btn{flex:1;padding:10px 0;font-family:var(--fd);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);background:none;border:none;border-right:1px solid var(--rim);cursor:pointer;transition:all .2s;text-align:center}
+  .q-btn:last-child{border-right:none}
+  .q-btn:hover{background:var(--rim);color:var(--text-mid)}
+  .q-btn.active{background:var(--muted);color:var(--text-bright)}
+  .skin-bar{display:flex;gap:0;border-top:1px solid var(--rim);overflow:hidden}
+  .skin-btn{flex:1;padding:10px 0;font-family:var(--fd);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);background:none;border:none;border-right:1px solid var(--rim);cursor:pointer;transition:all .2s;text-align:center}
+  .skin-btn:last-child{border-right:none}
+  .skin-btn:hover{background:var(--rim);color:var(--text-mid)}
+  .skin-btn.active{background:var(--muted);color:var(--text-bright)}
+  .bright-section{padding:14px 22px;border-top:1px solid var(--rim)}
+  .bright-head{font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px}
+  .bright-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .bright-row:last-child{margin-bottom:0}
+  .bright-lbl{font-family:var(--fd);font-size:9px;color:var(--muted);width:14px;flex-shrink:0}
+  .bright-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .bright-track{flex:1;position:relative;height:1px;background:var(--rim)}
+  .bright-fill{position:absolute;top:0;left:0;height:100%;background:var(--text-dim)}
+  .bright-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--text-bright);pointer-events:none;box-shadow:0 0 5px #fff4}
+  input[type=range].bright-input{position:absolute;inset:-10px 0;width:100%;opacity:0;cursor:pointer;height:22px}
+  .bright-val{font-family:var(--fd);font-size:9px;color:var(--text-mid);width:34px;text-align:right;flex-shrink:0}
+  #theory{padding:110px 48px;background:var(--void)}
+  .theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:52px;max-width:1160px;margin-left:auto;margin-right:auto;background:var(--rim);border:1px solid var(--rim)}
+  .tc{padding:34px 38px;background:var(--deep);transition:background .25s}
+  .tc:hover{background:var(--surface)}
+  .tc-num{font-family:var(--fd);font-size:9px;letter-spacing:.28em;color:var(--muted);margin-bottom:12px}
+  .tc-title{font-family:var(--fd);font-size:13px;color:var(--text-bright);margin-bottom:9px}
+  .tc-body{font-size:13px;color:var(--text-dim);line-height:1.75;font-weight:300}
+  #mission{padding:130px 48px;background:var(--deep);text-align:center}
+  .mission-text{font-family:var(--fd);font-size:clamp(15px,2.2vw,22px);color:var(--text-bright);max-width:720px;margin:0 auto 52px;line-height:1.62}
+  .mission-text em{font-style:normal;color:var(--text-dim)}
+  .supra-badge{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--rim);padding:9px 20px;font-family:var(--fd);font-size:9px;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase}
+  .sdot{width:5px;height:5px;border-radius:50%;background:#6622ff;animation:pulse 2.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.15}}
+  footer{padding:36px 48px;border-top:1px solid var(--rim);display:flex;justify-content:space-between;align-items:center}
+  .f-logo{font-family:var(--fd);font-size:10px;letter-spacing:.22em;color:var(--muted)}
+  .f-tag{font-size:12px;color:var(--muted);font-weight:300}
+  @media(max-width:800px){
+    nav{padding:14px 20px}.nav-links{display:none}
+    #simulator,#theory,#mission{padding:72px 20px}
+    .sim-grid{grid-template-columns:1fr}.theory-grid{grid-template-columns:1fr}
+    footer{flex-direction:column;gap:10px;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">SUPRASCOPE</a>
+  <ul class="nav-links">
+    <li><a href="#simulator">Object</a></li>
+    <li><a href="#theory">Theory</a></li>
+    <li><a href="#mission">Mission</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Built on Supra · Perceptual instrument</p>
+    <h1 class="hero-title">Supra<span>Scope</span></h1>
+    <p class="hero-sub">A telescope pointed at the hidden geometry of markets. The patterns reveal themselves.</p>
+  </div>
+  <div class="hero-hint">Drag to rotate</div>
+</section>
+
+<section id="simulator">
+  <div style="max-width:1160px;margin:0 auto">
+    <p class="sec-label">Live object</p>
+    <h2 class="sec-title">The object emerges.</h2>
+    <p class="sec-body">Six streams stacked in the same space. The connecting lines reveal their relationships. The skin makes the shape explicit. Drag to feel the depth.</p>
+    <div class="sim-grid">
+      <div id="sim-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="sim-hud">
+          <span class="sim-state-lbl" id="sim-lbl">Nominal state · drag to rotate</span>
+          <div class="legend">
+            <div class="leg-row"><span class="leg-dot" style="background:#4477ff"></span>Price</div>
+            <div class="leg-row"><span class="leg-dot" style="background:#9944ff"></span>Microstructure</div>
+            <div class="leg-row"><span class="leg-dot" style="background:#ff4477"></span>Derivatives</div>
+            <div class="leg-row"><span class="leg-dot" style="background:#44ffbb"></span>On-chain</div>
+            <div class="leg-row"><span class="leg-dot" style="background:#ffbb44"></span>Social</div>
+            <div class="leg-row"><span class="leg-dot" style="background:#aaaadd"></span>Macro</div>
+          </div>
+        </div>
+      </div>
+      <div class="dials-panel">
+        <div class="dials-head">Force field</div>
+        <div id="dials-container"></div>
+        <div class="dials-foot">
+          <span class="dials-range">−10 · 0 · +10</span>
+          <button class="btn-reset" onclick="resetDials()">Reset</button>
+        </div>
+        <div class="quality-bar" id="quality-bar">
+          <button class="q-btn" id="q-eco"   onclick="setQuality('eco')">Eco</button>
+          <button class="q-btn active" id="q-mid"   onclick="setQuality('mid')">Mid</button>
+          <button class="q-btn" id="q-ultra" onclick="setQuality('ultra')">Ultra</button>
+        </div>
+        <div class="skin-bar">
+          <button class="skin-btn active" id="sk-solid" onclick="setSkin('solid')">Solid</button>
+          <button class="skin-btn"        id="sk-ghost" onclick="setSkin('ghost')">Ghost</button>
+          <button class="skin-btn"        id="sk-off"   onclick="setSkin('off')">Off</button>
+        </div>
+        <div class="bright-section">
+          <div class="bright-head">Brightness</div>
+          <div class="bright-row" id="overall-bright-row">
+            <span class="bright-lbl" style="width:28px;font-size:8px;color:var(--text-dim)">ALL</span>
+            <div class="bright-track" id="obt">
+              <div class="bright-fill" id="obf" style="width:75%"></div>
+              <div class="bright-thumb" id="obth" style="left:75%"></div>
+              <input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="100">
+            </div>
+            <span class="bright-val" id="obv">100%</span>
+          </div>
+          <div id="layer-bright-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="theory">
+  <div style="max-width:1160px;margin:0 auto">
+    <p class="sec-label">Theory</p>
+    <h2 class="sec-title">Not a chart.<br>Not a signal.</h2>
+    <p class="sec-body" style="margin-bottom:0">A perceptual instrument. The object is not any single stream. It lives in the relationships between them — made visible by the skin that wraps their collective shape.</p>
+    <div class="theory-grid">
+      <div class="tc"><div class="tc-num">01</div><div class="tc-title">One object per asset</div><div class="tc-body">Every asset has its own body. Six data streams — price, microstructure, derivatives, on-chain, social, macro — stacked in the same 4D space. The skin wraps their collective volume. The object is what emerges from their entanglement.</div></div>
+      <div class="tc"><div class="tc-num">02</div><div class="tc-title">Signed spectrum</div><div class="tc-body">The scale runs −10 to +10. Zero is the midpoint, not the floor. Silence and withdrawal are first-class data with their own geometric expression. The skin contracts. The connectors dim. The shape becomes its own kind of visible.</div></div>
+      <div class="tc"><div class="tc-num">03</div><div class="tc-title">Three layers of memory</div><div class="tc-body">Short memory is reactive. Mid memory is contextual. Long memory is constitutional. When all three align the skin settles into its lowest energy form. When they diverge the surface deforms and the connectors fractal outward.</div></div>
+      <div class="tc"><div class="tc-num">04</div><div class="tc-title">Nominal gravity</div><div class="tc-body">The object learns its own center through simulation. A gravitational field pulls it back toward what it has learned is normal. Deviation is not pathology — it is information density. The skin holds the memory of its own shape.</div></div>
+      <div class="tc"><div class="tc-num">05</div><div class="tc-title">Emergent pattern</div><div class="tc-body">Patterns crystallize from the relationship between layers. The same configuration that appeared three months ago will feel familiar before it is understood. The skin is how the eye learns what this asset normally looks like.</div></div>
+      <div class="tc"><div class="tc-num">06</div><div class="tc-title">Agent readable</div><div class="tc-body">The API exposes structural narrative, not geometry. An agent receives memory layer divergence, deviation fingerprints, topology events — and reasons about it with its own intelligence. A new primitive for automated cognition.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="mission">
+  <p class="sec-label" style="margin-bottom:26px">Mission</p>
+  <p class="mission-text">SupraScope is a perceptual instrument. <em>It transforms the entangled data reality of any asset into a living object — observable, replayable, and structurally honest.</em> Not a signal. Not a prediction. A telescope pointed at the hidden geometry of markets.</p>
+  <div class="supra-badge"><span class="sdot"></span>Built natively on Supra</div>
+</section>
+
+<footer>
+  <span class="f-logo">SUPRASCOPE</span>
+  <span class="f-tag">The patterns reveal themselves.</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── QUALITY TIERS ─────────────────────────────────────────────────
+// eco = mobile low-power  |  mid = default  |  ultra = desktop high-fidelity
+const QUALITY_TIERS = {
+  eco:   { mul:0.18, ptSize:0.018, connRate:0.012, skinDetail:1, fogDensity:0.55, label:'Eco'   },
+  mid:   { mul:0.55, ptSize:0.014, connRate:0.042, skinDetail:3, fogDensity:0.42, label:'Mid'   },
+  ultra: { mul:1.00, ptSize:0.011, connRate:0.075, skinDetail:4, fogDensity:0.30, label:'Ultra' },
+};
+
+// Auto-detect starting tier
+const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 600;
+let currentQuality = isMobile ? 'eco' : 'mid';
+const quality = { get cfg(){ return QUALITY_TIERS[currentQuality]; } };
+
+// ── STREAM CONFIG ──────────────────────────────────────────────────
+const STREAM_BASE = [
+  { name:'Price',          r:0.27, g:0.47, b:1.00, baseCount:500, layerZ: 0.00, armN:3, spread:1.0 },
+  { name:'Microstructure', r:0.60, g:0.27, b:1.00, baseCount:420, layerZ: 0.09, armN:2, spread:0.95},
+  { name:'Derivatives',    r:1.00, g:0.27, b:0.47, baseCount:420, layerZ:-0.09, armN:3, spread:1.0 },
+  { name:'On-chain',       r:0.27, g:1.00, b:0.73, baseCount:360, layerZ: 0.16, armN:2, spread:0.90},
+  { name:'Social',         r:1.00, g:0.73, b:0.27, baseCount:360, layerZ:-0.16, armN:2, spread:0.88},
+  { name:'Macro',          r:0.67, g:0.67, b:0.87, baseCount:280, layerZ: 0.22, armN:1, spread:0.82},
+];
+
+// Build STREAMS with counts scaled to quality
+function getStreams(){
+  return STREAM_BASE.map(s=>({...s, count:Math.max(40,Math.floor(s.baseCount*quality.cfg.mul))}));
+}
+let STREAMS = getStreams();
+const DCOLS=['#4477ff','#9944ff','#ff4477','#44ffbb','#ffbb44','#aaaadd'];
+
+// ── BRIGHTNESS STATE ──────────────────────────────────────────────
+const brightnessOverall = {val:1.0}; // 0–2
+const brightnessLayer   = new Array(6).fill(1.0);
+
+function buildBrightness(){
+  // Overall slider
+  document.getElementById('overall-bright').addEventListener('input',e=>{
+    brightnessOverall.val = parseFloat(e.target.value)/100;
+    const pct = parseFloat(e.target.value)/2;
+    document.getElementById('obf').style.width  = pct+'%';
+    document.getElementById('obth').style.left  = pct+'%';
+    document.getElementById('obv').textContent  = e.target.value+'%';
+  });
+
+  // Per-layer sliders
+  const c = document.getElementById('layer-bright-container');
+  c.innerHTML='';
+  STREAMS.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.className='bright-row';
+    row.innerHTML=`<span class="bright-lbl">${String(i+1).padStart(2,'0')}</span><span class="bright-dot" style="background:${DCOLS[i]}"></span><div class="bright-track" id="lbt${i}"><div class="bright-fill" id="lbf${i}" style="width:75%"></div><div class="bright-thumb" id="lbth${i}" style="left:75%"></div><input type="range" class="bright-input" id="lb${i}" min="0" max="200" step="1" value="100"></div><span class="bright-val" id="lbv${i}">100%</span>`;
+    c.appendChild(row);
+    document.getElementById(`lb${i}`).addEventListener('input',e=>{
+      brightnessLayer[i]=parseFloat(e.target.value)/100;
+      const pct=parseFloat(e.target.value)/2;
+      document.getElementById(`lbf${i}`).style.width=pct+'%';
+      document.getElementById(`lbth${i}`).style.left=pct+'%';
+      document.getElementById(`lbv${i}`).textContent=e.target.value+'%';
+    });
+  });
+}
+buildBrightness();
+
+// ── QUALITY SWITCHER ───────────────────────────────────────────────
+// Scene rebuild refs — populated when simulator starts
+const simRefs = { rebuild: null };
+
+function setQuality(tier){
+  currentQuality = tier;
+  STREAMS = getStreams();
+  ['eco','mid','ultra'].forEach(t=>{
+    const btn = document.getElementById('q-'+t);
+    if(btn) btn.classList.toggle('active', t===tier);
+  });
+  // Rebuild sim scene with new particle counts
+  if(simRefs.rebuild) simRefs.rebuild();
+}
+
+// Fix initial active state for mobile
+if(isMobile){
+  document.getElementById('q-eco')?.classList.add('active');
+  document.getElementById('q-mid')?.classList.remove('active');
+}
+
+// ── SKIN TOGGLE ────────────────────────────────────────────────────
+let skinMode = 'solid'; // solid | ghost | off
+const skinRefs = { mesh:null, wire:null };
+
+function setSkin(mode){
+  skinMode = mode;
+  ['solid','ghost','off'].forEach(m=>{
+    document.getElementById('sk-'+m)?.classList.toggle('active', m===mode);
+  });
+  applySkimMode();
+}
+
+function applySkimMode(){
+  if(!skinRefs.mesh) return;
+  if(skinMode==='off'){
+    skinRefs.mesh.visible = false;
+    skinRefs.wire.visible = false;
+  } else if(skinMode==='ghost'){
+    skinRefs.mesh.visible = true;
+    skinRefs.wire.visible = true;
+    skinRefs.mesh.material.opacity = 0.04;
+    skinRefs.wire.material.opacity = 0.04;
+  } else {
+    skinRefs.mesh.visible = true;
+    skinRefs.wire.visible = true;
+    // Let the render loop manage opacity normally
+  }
+}
+
+// ── DIALS ──────────────────────────────────────────────────────────
+const dialState=new Array(6).fill(0);
+function dialColor(v){
+  if(v<-6)return'#1144ee';if(v<-2)return'#6622ee';if(v<0)return'#9944bb';
+  if(v===0)return'#181830';if(v<3)return'#ee5522';if(v<7)return'#eeaa11';return'#ffdd00';
+}
+function buildDials(){
+  const c=document.getElementById('dials-container');c.innerHTML='';
+  for(let i=0;i<6;i++){
+    const r=document.createElement('div');r.className='dial-row';
+    r.innerHTML=`<span class="dial-idx">0${i+1}</span><span class="dial-sdot" style="background:${DCOLS[i]}"></span><div class="dial-track" id="tr${i}"><div class="dial-fill" id="fi${i}"></div><div class="dial-cmark"></div><div class="dial-thumb" id="th${i}"></div><input type="range" class="dial-input" id="di${i}" min="-10" max="10" step="0.1" value="0"></div><span class="dial-val" id="dv${i}">0.0</span>`;
+    c.appendChild(r);
+    document.getElementById(`di${i}`).addEventListener('input',e=>{dialState[i]=parseFloat(e.target.value);refreshDial(i);refreshLbl();});
+    refreshDial(i);
+  }
+}
+function refreshDial(i){
+  const v=dialState[i],pct=(v+10)/20*100,col=dialColor(v);
+  const fi=document.getElementById(`fi${i}`),th=document.getElementById(`th${i}`),dv=document.getElementById(`dv${i}`);
+  if(v>=0){fi.style.left='50%';fi.style.width=(pct-50)+'%';}else{fi.style.left=pct+'%';fi.style.width=(50-pct)+'%';}
+  fi.style.background=col;th.style.left=pct+'%';th.style.color=col;
+  dv.textContent=(v>=0?'+':'')+v.toFixed(1);dv.style.color=col;
+}
+function resetDials(){for(let i=0;i<6;i++){dialState[i]=0;document.getElementById(`di${i}`).value=0;refreshDial(i);}refreshLbl();}
+function refreshLbl(){
+  const m=Math.sqrt(dialState.reduce((s,v)=>s+v*v,0));
+  const el=document.getElementById('sim-lbl');
+  if(m<1.5)el.textContent='Nominal state · drag to rotate';
+  else if(m<5)el.textContent='Active deviation · drag to rotate';
+  else if(m<10)el.textContent='Significant departure';
+  else el.textContent='Extreme state';
+}
+buildDials();
+
+// ── GALAXY BUILDER ─────────────────────────────────────────────────
+function gaussRand(){
+  let u=0,v=0;
+  while(u===0)u=Math.random();while(v===0)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+function buildGalaxy(cfg){
+  const n=cfg.count;
+  const pos=new Float32Array(n*3);
+  const col=new Float32Array(n*3);
+  const nom=new Float32Array(n*3);
+  const tiltQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(cfg.layerZ*.35,cfg.layerZ*.2,0));
+  for(let i=0;i<n;i++){
+    let x,y,z;
+    if(Math.random()<0.10){
+      const cr=Math.abs(gaussRand())*0.10;
+      const ca=Math.random()*Math.PI*2;
+      x=Math.cos(ca)*cr;y=(Math.random()-.5)*.025;z=Math.sin(ca)*cr;
+    } else {
+      const arm=Math.floor(Math.random()*cfg.armN);
+      const t=Math.pow(Math.random(),.55);
+      const angle=(arm/cfg.armN)*Math.PI*2+t*Math.PI*2+(Math.random()-.5)*.28;
+      const radius=0.08+t*cfg.spread*.62;
+      const scatter=(1-t*.6)*.05;
+      x=Math.cos(angle)*radius+(Math.random()-.5)*scatter;
+      y=(Math.random()-.5)*.03*(1-t*.65);
+      z=Math.sin(angle)*radius+(Math.random()-.5)*scatter;
+    }
+    const v=new THREE.Vector3(x,y,z).applyQuaternion(tiltQ);
+    v.z+=cfg.layerZ;
+    pos[i*3]=v.x;pos[i*3+1]=v.y;pos[i*3+2]=v.z;
+    nom[i*3]=v.x;nom[i*3+1]=v.y;nom[i*3+2]=v.z;
+    const dist=Math.sqrt(v.x*v.x+v.z*v.z);
+    const bright=Math.max(0.25,1-dist/cfg.spread*.45)*(0.55+Math.random()*.45);
+    col[i*3]=cfg.r*bright;col[i*3+1]=cfg.g*bright;col[i*3+2]=cfg.b*bright;
+  }
+  return{pos,col,nom,n};
+}
+
+// ── SKIN BUILDER ───────────────────────────────────────────────────
+// Samples points across all streams, builds an icosphere that
+// encloses them — deformed to fit the collective bounding shape.
+// We use a subdivided icosahedron and project each vertex outward
+// to the approximate surface of the point cloud.
+function buildSkin(galaxies){
+  // Collect a sample of all particle positions
+  const allPts=[];
+  galaxies.forEach(g=>{
+    const step=Math.max(1,Math.floor(g.n/60));
+    for(let i=0;i<g.n;i+=step){
+      allPts.push(new THREE.Vector3(g.pos[i*3],g.pos[i*3+1],g.pos[i*3+2]));
+    }
+  });
+
+  // Compute centroid
+  const centroid=new THREE.Vector3();
+  allPts.forEach(p=>centroid.add(p));
+  centroid.divideScalar(allPts.length);
+
+  // Subdivided icosphere as base skin mesh
+  const geo=new THREE.IcosahedronGeometry(1,3);
+  const posAttr=geo.attributes.position;
+  const count=posAttr.count;
+
+  // For each vertex direction, find the max extent of the point cloud
+  for(let i=0;i<count;i++){
+    const dir=new THREE.Vector3(posAttr.getX(i),posAttr.getY(i),posAttr.getZ(i)).normalize();
+
+    // Find furthest point in this direction
+    let maxProj=0.5;
+    allPts.forEach(p=>{
+      const rel=p.clone().sub(centroid);
+      const proj=rel.dot(dir);
+      if(proj>maxProj)maxProj=proj;
+    });
+
+    // Set vertex to that extent + small padding for skin feel
+    const r=maxProj*1.08;
+    posAttr.setXYZ(i,
+      centroid.x+dir.x*r,
+      centroid.y+dir.y*r,
+      centroid.z+dir.z*r
+    );
+  }
+  geo.computeVertexNormals();
+
+  // Skin material — translucent, spectral-tinted, double-sided
+  const mat=new THREE.MeshPhongMaterial({
+    color: new THREE.Color(0.35,0.25,0.90),
+    emissive: new THREE.Color(0.08,0.04,0.22),
+    specular: new THREE.Color(0.6,0.5,1.0),
+    shininess:55,
+    transparent:true,
+    opacity:0.10,
+    side:THREE.DoubleSide,
+    depthWrite:false,
+    wireframe:false
+  });
+
+  // Wireframe overlay for the skin — shows the mesh topology
+  const wireMat=new THREE.MeshBasicMaterial({
+    color:new THREE.Color(0.40,0.30,1.0),
+    transparent:true,
+    opacity:0.08,
+    wireframe:true,
+    depthWrite:false
+  });
+
+  return{geo,mat,wireMat,posAttr,centroid,count};
+}
+
+// ── CONNECTORS ────────────────────────────────────────────────────
+function buildConnectors(posA,posB,nA,nB,cA,cB,maxDist,rate){
+  const lp=[],lc=[];
+  const sA=Math.floor(nA*rate);
+  for(let i=0;i<sA;i++){
+    const ai=Math.floor(Math.random()*nA);
+    const ax=posA[ai*3],ay=posA[ai*3+1],az=posA[ai*3+2];
+    let best=Infinity,bi=-1;
+    const sN=Math.floor(nB*.12);
+    for(let s=0;s<sN;s++){
+      const bj=Math.floor(Math.random()*nB);
+      const dx=posB[bj*3]-ax,dy=posB[bj*3+1]-ay,dz=posB[bj*3+2]-az;
+      const d=dx*dx+dy*dy+dz*dz;
+      if(d<best){best=d;bi=bj;}
+    }
+    if(bi>=0&&Math.sqrt(best)<maxDist){
+      lp.push(ax,ay,az,posB[bi*3],posB[bi*3+1],posB[bi*3+2]);
+      lc.push(cA[0],cA[1],cA[2],cB[0],cB[1],cB[2]);
+    }
+  }
+  return{pos:new Float32Array(lp),col:new Float32Array(lc)};
+}
+
+// ── RENDERER FACTORY ───────────────────────────────────────────────
+function makeRenderer(canvasId,wrapId){
+  const canvas=document.getElementById(canvasId);
+  const wrap=wrapId?document.getElementById(wrapId):null;
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setClearColor(0x02020a,1);
+  const scene=new THREE.Scene();
+  scene.fog=new THREE.FogExp2(0x02020a,0.42);
+  const camera=new THREE.PerspectiveCamera(52,1,.01,100);
+  function resize(){
+    const w=wrap?wrap.clientWidth:canvas.offsetWidth;
+    const h=wrap?wrap.clientHeight:canvas.offsetHeight;
+    renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+  resize();window.addEventListener('resize',resize);
+  return{renderer,scene,camera};
+}
+
+function makeDrag(el,initRX,initRY,initZ){
+  let drag=false,px=0,py=0,rX=initRX,rY=initRY,z=initZ||2.6;
+  let pinchDist0=null;
+
+  el.addEventListener('mousedown',e=>{drag=true;px=e.clientX;py=e.clientY;});
+  window.addEventListener('mouseup',()=>drag=false);
+  window.addEventListener('mousemove',e=>{
+    if(!drag)return;
+    rY+=(e.clientX-px)*.004;rX+=(e.clientY-py)*.004;
+    rX=Math.max(-1.4,Math.min(1.4,rX));px=e.clientX;py=e.clientY;
+  });
+
+  // Scroll wheel zoom
+  el.addEventListener('wheel',e=>{
+    e.preventDefault();
+    z+=e.deltaY*.004;
+    z=Math.max(.6,Math.min(6.0,z));
+  },{passive:false});
+
+  // Pinch zoom
+  el.addEventListener('touchstart',e=>{
+    if(e.touches.length===2){
+      pinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    } else {
+      drag=true;px=e.touches[0].clientX;py=e.touches[0].clientY;
+    }
+  },{passive:true});
+  window.addEventListener('touchend',()=>{drag=false;pinchDist0=null;});
+  window.addEventListener('touchmove',e=>{
+    if(e.touches.length===2&&pinchDist0!==null){
+      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      z-=(dist-pinchDist0)*.008;
+      z=Math.max(.6,Math.min(6.0,z));
+      pinchDist0=dist;
+    } else if(drag){
+      rY+=(e.touches[0].clientX-px)*.005;rX+=(e.touches[0].clientY-py)*.005;
+      px=e.touches[0].clientX;py=e.touches[0].clientY;
+    }
+  },{passive:true});
+
+  return{get rX(){return rX},get rY(){return rY},get z(){return z},get drag(){return drag},setRY(v){rY=v}};
+}
+
+// ── SCENE BUILDER ──────────────────────────────────────────────────
+function buildScene(scene,forSim){
+  const galaxies=STREAMS.map(cfg=>buildGalaxy(cfg));
+
+  // ── Lights — added externally for sim (to allow rebuild), directly for hero ──
+  if(!forSim){
+    const ambient=new THREE.AmbientLight(0x111133,3);scene.add(ambient);
+    const l1=new THREE.PointLight(0x6633ff,6,8);l1.position.set(1.5,1,1.5);scene.add(l1);
+    const l2=new THREE.PointLight(0xff4422,4,8);l2.position.set(-1.5,-0.5,1);scene.add(l2);
+    const l3=new THREE.PointLight(0x44aaff,3,8);l3.position.set(0,2,-1);scene.add(l3);
+  }
+
+  // ── Particle clouds ──
+  const ptsMeshes=[];
+  galaxies.forEach((g,si)=>{
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(g.pos.slice(),3));
+    geo.setAttribute('color',new THREE.BufferAttribute(g.col,3));
+    const mat=new THREE.PointsMaterial({
+      size:forSim?.014:.011,
+      vertexColors:true,transparent:true,
+      opacity:forSim?.95:.80,
+      sizeAttenuation:true,depthWrite:false
+    });
+    const pts=new THREE.Points(geo,mat);
+    scene.add(pts);
+    if(forSim){g.pts=pts;g.geo=geo;g.mat=mat;}
+    ptsMeshes.push(pts);
+  });
+
+  // ── Connector lines ──
+  const cr=forSim?quality.cfg.connRate:.042;
+  const connPairs=[[0,1,.52,cr],[1,2,.52,cr],[2,3,.52,cr*.9],[3,4,.52,cr*.9],[4,5,.52,cr*.75],[0,3,.58,cr*.65],[1,4,.58,cr*.60],[2,5,.58,cr*.50]];
+  const connObjs=[];
+  connPairs.forEach(([ai,bi,md,rate])=>{
+    const gA=galaxies[ai],gB=galaxies[bi];
+    const cA=[STREAMS[ai].r,STREAMS[ai].g,STREAMS[ai].b];
+    const cB=[STREAMS[bi].r,STREAMS[bi].g,STREAMS[bi].b];
+    const{pos,col}=buildConnectors(gA.pos,gB.pos,gA.n,gB.n,cA,cB,md,rate);
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(pos.slice(),3));
+    geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+    const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:forSim?.28:.18,depthWrite:false});
+    const lines=new THREE.LineSegments(geo,mat);
+    scene.add(lines);
+    if(forSim)connObjs.push({geo,mat,nomPos:pos.slice(),ai,bi});
+  });
+
+  // ── Skin mesh ──
+  const skin=buildSkin(galaxies);
+  const skinMesh=new THREE.Mesh(skin.geo,skin.mat);
+  scene.add(skinMesh);
+  const wireframeMesh=new THREE.Mesh(skin.geo.clone(),skin.wireMat);
+  scene.add(wireframeMesh);
+
+  return{galaxies,connObjs,skinData:skin,skinMesh,wireframeMesh};
+}
+
+// ── HERO ───────────────────────────────────────────────────────────
+(function(){
+  const{renderer,scene,camera}=makeRenderer('hero-canvas',null);
+  camera.position.set(0,.18,2.6);
+  buildScene(scene,false);
+  const d=makeDrag(document.getElementById('hero-canvas'),.10,0,2.6);
+  let t=0;
+  (function tick(){requestAnimationFrame(tick);t+=.00025;
+    if(!d.drag)d.setRY(d.rY+.00035);
+    scene.rotation.x=d.rX;scene.rotation.y=d.rY+t;
+    camera.position.z+=(d.z-camera.position.z)*.08;
+    renderer.render(scene,camera);
+  })();
+})();
+
+// ── SIMULATOR ──────────────────────────────────────────────────────
+(function(){
+  const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
+  camera.position.set(0,.18,2.6);
+
+  // Mutable scene refs — replaced on quality rebuild
+  let galaxies,connObjs,skinData,skinMesh,wireframeMesh,skinNominal;
+
+  function initScene(){
+    // Clear previous objects
+    while(scene.children.length>0){ const o=scene.children[0]; scene.remove(o); if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }
+    // Re-add lights
+    const amb=new THREE.AmbientLight(0x111133,3); scene.add(amb);
+    const l1=new THREE.PointLight(0x6633ff,6,8);l1.position.set(1.5,1,1.5);scene.add(l1);
+    const l2=new THREE.PointLight(0xff4422,4,8);l2.position.set(-1.5,-.5,1);scene.add(l2);
+    const l3=new THREE.PointLight(0x44aaff,3,8);l3.position.set(0,2,-1);scene.add(l3);
+    // Rebuild with current quality
+    const built=buildScene(scene,true);
+    galaxies=built.galaxies;connObjs=built.connObjs;
+    skinData=built.skinData;skinMesh=built.skinMesh;wireframeMesh=built.wireframeMesh;
+    skinNominal=new Float32Array(skinData.posAttr.array.length);
+    skinNominal.set(skinData.posAttr.array);
+    // Register skin refs for toggle
+    skinRefs.mesh = skinMesh;
+    skinRefs.wire = wireframeMesh;
+    applySkimMode();
+    // Apply fog density for quality
+    scene.fog=new THREE.FogExp2(0x02020a,quality.cfg.fogDensity);
+  }
+
+  initScene();
+  simRefs.rebuild = initScene; // expose to setQuality()
+
+  const d=makeDrag(document.getElementById('sim-wrap'),.10,0,2.6);
+  let t=0;
+
+  (function tick(){
+    requestAnimationFrame(tick);t+=.00025;
+
+    const inertia    =dialState[0];
+    const tension    =dialState[1];
+    const compression=dialState[2];
+    const expansion  =dialState[3];
+    const turbulence =dialState[4];
+    const memory     =dialState[5];
+
+    const inertDamp=Math.max(.02,1-Math.abs(inertia)*.055);
+
+    // ── Particles ──
+    if(!galaxies)return;
+    galaxies.forEach((g,si)=>{
+      if(!g.geo)return;
+      const arr=g.geo.attributes.position.array;
+      const nom=g.pos;const n=g.n;const ss=.85+si*.06;
+      const memF=(.012+Math.max(0,memory)*.009)*inertDamp;
+      const compF=compression*.00055*ss*inertDamp;
+      const expF=expansion*.00055*ss*inertDamp;
+      const tenF=tension*.00065*ss*inertDamp;
+      const tw=Math.sin(t*1.1+si*.95)*turbulence*.00045*inertDamp;
+      for(let i=0;i<n;i++){
+        const ix=i*3,iy=ix+1,iz=ix+2;
+        let x=arr[ix],y=arr[iy],z=arr[iz];
+        x+=(nom[ix]-x)*memF;y+=(nom[iy]-y)*memF;z+=(nom[iz]-z)*memF;
+        x-=x*compF;y-=y*compF;z-=z*compF;
+        const len=Math.sqrt(x*x+y*y+z*z)+.001;
+        x+=(x/len)*expF;y+=(y/len)*expF;z+=(z/len)*expF;
+        y+=y*tenF;x-=x*tenF*.25;z-=z*tenF*.25;
+        x+=tw;
+        arr[ix]=x;arr[iy]=y;arr[iz]=z;
+      }
+      g.geo.attributes.position.needsUpdate=true;
+      const bMul=brightnessOverall.val*brightnessLayer[si];
+      g.mat.size=(quality.cfg.ptSize+expansion*.0006-compression*.0004)*Math.max(.3,bMul);
+      g.mat.opacity=Math.min(1,(.9+Math.abs(turbulence)*.008)*bMul);
+    });
+
+    // ── Connectors ──
+    connObjs.forEach(co=>{
+      const arr=co.geo.attributes.position.array;
+      const nom=co.nomPos;const nL=arr.length/6;
+      const turbMag=Math.abs(turbulence)/10,tensMag=Math.abs(tension)/10;
+      co.mat.opacity=Math.min(.95,(.24+turbMag*.32+tensMag*.18)*brightnessOverall.val);
+      const memF=(.01+Math.max(0,memory)*.007)*inertDamp;
+      const compF=compression*.00045*inertDamp;
+      const expF=expansion*.00045*inertDamp;
+      const tenF=tension*.00055*inertDamp;
+      const tw=Math.sin(t*1.1+co.ai*.95)*turbulence*.00045*inertDamp;
+      for(let i=0;i<nL;i++){
+        for(let e=0;e<2;e++){
+          const b=i*6+e*3;
+          let x=arr[b],y=arr[b+1],z=arr[b+2];
+          const nx=nom[b],ny=nom[b+1],nz=nom[b+2];
+          x+=(nx-x)*memF;y+=(ny-y)*memF;z+=(nz-z)*memF;
+          x-=x*compF;y-=y*compF;z-=z*compF;
+          const len=Math.sqrt(x*x+y*y+z*z)+.001;
+          x+=(x/len)*expF;y+=(y/len)*expF;z+=(z/len)*expF;
+          y+=y*tenF;x-=x*tenF*.25;z-=z*tenF*.25;
+          x+=tw;
+          arr[b]=x;arr[b+1]=y;arr[b+2]=z;
+        }
+      }
+      co.geo.attributes.position.needsUpdate=true;
+    });
+
+    // ── Skin deformation ──
+    // Skin breathes with the field — smoothly follows the collective shape
+    const skinArr=skinData.posAttr.array;
+    const memF=(.008+Math.max(0,memory)*.006)*inertDamp;
+    const compF=compression*.0005*inertDamp;
+    const expF=expansion*.0006*inertDamp;
+    const tenF=tension*.0007*inertDamp;
+    const turbF=turbulence*.0003*inertDamp;
+
+    for(let i=0;i<skinData.count;i++){
+      const ix=i*3,iy=ix+1,iz=ix+2;
+      let x=skinArr[ix],y=skinArr[iy],z=skinArr[iz];
+      const nx=skinNominal[ix],ny=skinNominal[iy],nz=skinNominal[iz];
+
+      // Pull toward nominal skin shape
+      x+=(nx-x)*memF;y+=(ny-y)*memF;z+=(nz-z)*memF;
+
+      // Apply forces
+      x-=x*compF;y-=y*compF;z-=z*compF;
+      const len=Math.sqrt(x*x+y*y+z*z)+.001;
+      x+=(x/len)*expF;y+=(y/len)*expF;z+=(z/len)*expF;
+      y+=y*tenF;x-=x*tenF*.22;z-=z*tenF*.22;
+
+      // Turbulence: slow wave across skin surface
+      const wave=Math.sin(t*1.5+nx*3+nz*2)*turbF;
+      x+=wave;z+=wave*.7;
+
+      skinArr[ix]=x;skinArr[iy]=y;skinArr[iz]=z;
+    }
+    skinData.posAttr.needsUpdate=true;
+    skinData.geo.computeVertexNormals();
+
+    // Skin opacity responds to state (only in solid mode)
+    const mag=Math.sqrt(dialState.reduce((s,v)=>s+v*v,0));
+    if(skinMode==='solid'){
+      const baseOpacity=.10+expansion*.008-compression*.005;
+      skinMesh.material.opacity=Math.max(.02,Math.min(.35,(baseOpacity+mag*.006)*brightnessOverall.val));
+    } else if(skinMode==='ghost'){
+      skinMesh.material.opacity=0.04;
+    }
+    // Skin color shifts with dominant force
+    const warmth=(tension+expansion)/20;
+    const cold=(-tension+compression)/20;
+    skinMesh.material.color.setRGB(
+      .35+Math.max(0,warmth)*.4,
+      .25+Math.abs(turbulence/10)*.15,
+      .90-Math.max(0,warmth)*.3+Math.max(0,cold)*.1
+    );
+    skinMesh.material.emissive.setRGB(
+      (.08+Math.max(0,warmth)*.12)*skinMesh.material.opacity*3,
+      .04*skinMesh.material.opacity*3,
+      (.22-Math.max(0,warmth)*.1)*skinMesh.material.opacity*3
+    );
+
+    // Wireframe opacity
+    if(skinMode==='solid'){
+      wireframeMesh.material.opacity=Math.min(.5,(.06+Math.abs(turbulence)*.012)*brightnessOverall.val);
+    } else if(skinMode==='ghost'){
+      wireframeMesh.material.opacity=0.04;
+    }
+
+    // Copy deformed geometry to wireframe
+    const wArr=wireframeMesh.geometry.attributes.position.array;
+    wArr.set(skinArr);
+    wireframeMesh.geometry.attributes.position.needsUpdate=true;
+
+    if(!d.drag)d.setRY(d.rY+.00035);
+    scene.rotation.x=d.rX;scene.rotation.y=d.rY+t;
+    camera.position.z+=(d.z-camera.position.z)*.08;
+    renderer.render(scene,camera);
+  })();
+})();
+</script>
+</body>
+</html>

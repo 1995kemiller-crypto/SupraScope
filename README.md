@@ -1,6 +1,3 @@
-[![Live](https://img.shields.io/badge/live-supra--scope.com-6622ff?style=flat-square)
-](https://supra-scope.com)
-
 # SupraScope
 
 > A telescope pointed at the hidden geometry of markets.

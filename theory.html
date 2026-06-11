@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupraScope — Layer Cohesion Theory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --void:#02020a;--deep:#04040e;--surface:#09091a;--rim:#111128;
+    --muted:#252548;--text-dim:#484878;--text-mid:#7878b0;--text-bright:#e0e0f0;
+    --fd:'Space Mono',monospace;--fb:'Space Grotesk',sans-serif;
+    --blue:#3366ff;--purple:#8833ff;--coral:#ff3366;--teal:#33ffaa;--amber:#ffaa33;--gray:#888aaa;
+  }
+  body{background:var(--void);color:var(--text-mid);font-family:var(--fb);font-size:14px;line-height:1.6;padding:48px;overflow-x:hidden}
+  h1{font-family:var(--fd);font-size:13px;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:48px}
+  h2{font-family:var(--fd);font-size:10px;letter-spacing:.3em;color:var(--muted);text-transform:uppercase;margin:48px 0 20px}
+
+  /* STREAM DEFINITIONS */
+  .streams-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rim);border:1px solid var(--rim);margin-bottom:1px}
+  .stream-cell{padding:24px 28px;background:var(--deep)}
+  .stream-name{font-family:var(--fd);font-size:12px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .stream-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .stream-sources{font-size:12px;color:var(--text-dim);font-weight:300;line-height:1.7}
+  .stream-signed{font-family:var(--fd);font-size:9px;letter-spacing:.15em;color:var(--muted);margin-top:10px;text-transform:uppercase}
+
+  /* COHESION TABLE */
+  .cohesion-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--rim);border:1px solid var(--rim);margin-bottom:1px}
+  .coh-cell{padding:22px 24px;background:var(--deep)}
+  .coh-pair{font-family:var(--fd);font-size:11px;color:var(--text-bright);margin-bottom:10px}
+  .coh-row{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--text-dim);margin-bottom:5px;font-weight:300}
+  .coh-row:last-child{margin-bottom:0}
+  .coh-sign{font-family:var(--fd);font-size:9px;padding:2px 6px;border-radius:2px;flex-shrink:0}
+  .agree{color:#33ffaa;background:rgba(51,255,170,.08);border:1px solid rgba(51,255,170,.2)}
+  .diverg{color:#ff3366;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2)}
+
+  /* TOPOLOGY EVENTS */
+  .topo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rim);border:1px solid var(--rim);margin-bottom:1px}
+  .topo-cell{padding:24px;background:var(--deep)}
+  .topo-name{font-family:var(--fd);font-size:13px;color:var(--text-bright);margin-bottom:6px}
+  .topo-trigger{font-size:11px;color:var(--text-dim);font-weight:300;margin-bottom:8px;line-height:1.6}
+  .topo-result{font-family:var(--fd);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .topo-swatch{width:32px;height:3px;border-radius:1px;margin-bottom:12px}
+
+  /* MEMORY NOTE */
+  .memory-bar{padding:24px 28px;background:var(--surface);border:1px solid var(--rim);margin-top:1px}
+  .memory-title{font-family:var(--fd);font-size:11px;color:var(--text-bright);margin-bottom:6px}
+  .memory-body{font-size:13px;color:var(--text-dim);font-weight:300;max-width:760px}
+
+  /* RESULTS */
+  .results-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rim);border:1px solid var(--rim);margin-bottom:1px}
+  .res-cell{padding:22px 24px;background:var(--deep)}
+  .res-title{font-family:var(--fd);font-size:11px;color:var(--text-bright);margin-bottom:10px}
+  .res-row{font-size:12px;color:var(--text-dim);font-weight:300;margin-bottom:5px;display:flex;align-items:baseline;gap:7px}
+  .res-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px}
+
+  @media(max-width:700px){
+    body{padding:24px}
+    .streams-grid,.cohesion-grid,.results-grid{grid-template-columns:1fr}
+    .topo-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<h1>SupraScope — Layer definitions · Cohesion · Results</h1>
+
+<h2>Stream definitions</h2>
+<div class="streams-grid">
+  <div class="stream-cell">
+    <div class="stream-name"><span class="stream-dot" style="background:var(--blue)"></span>Price</div>
+    <div class="stream-sources">OHLCV · spot & perp prices · cross-exchange spread · funding rate · spot-perp basis · tick velocity</div>
+    <div class="stream-signed">−10 withdrawal · 0 neutral · +10 active conviction</div>
+  </div>
+  <div class="stream-cell">
+    <div class="stream-name"><span class="stream-dot" style="background:var(--purple)"></span>Microstructure</div>
+    <div class="stream-sources">Order book depth by layer · bid-ask delta · trade flow imbalance · large order arrival rate · liquidation cascade heat</div>
+    <div class="stream-signed">−10 vacuum · 0 balanced · +10 aggressive flow</div>
+  </div>
+  <div class="stream-cell">
+    <div class="stream-name"><span class="stream-dot" style="background:var(--coral)"></span>Derivatives</div>
+    <div class="stream-sources">Open interest velocity · implied vol surface · skew · put/call ratio · dealer gamma exposure · funding</div>
+    <div class="stream-signed">−10 unwind · 0 neutral · +10 conviction build</div>
+  </div>
+  <div class="stream-cell">
+    <div class="stream-name"><span class="stream-dot" style="background:var(--teal)"></span>On-chain</div>
+    <div class="stream-sources">New wallet growth · exchange inflows/outflows · whale move frequency · dormant coin activation · stablecoin flow</div>
+    <div class="stream-signed">−10 outflow · 0 dormant · +10 accumulation</div>
+  </div>
+  <div class="stream-cell">
+    <div class="stream-name"><span class="stream-dot" style="background:var(--amber)"></span>Social</div>
+    <div class="stream-sources">Mention velocity · sentiment polarity · narrative bifurcation score · consensus age · search trend acceleration</div>
+    <div class="stream-signed">−10 silence · 0 ambient · +10 viral attention</div>
+  </div>
+  <div class="stream-cell">
+    <div class="stream-name"><span class="stream-dot" style="background:var(--gray)"></span>Macro</div>
+    <div class="stream-sources">DXY · yield curve · BTC dominance · stablecoin dominance · FOMC / CPI event proximity · cross-asset correlation</div>
+    <div class="stream-signed">−10 risk-off pressure · 0 neutral · +10 risk-on</div>
+  </div>
+</div>
+
+<h2>Cohesion between layers → what results</h2>
+<div class="cohesion-grid">
+  <div class="coh-cell">
+    <div class="coh-pair">Price × Microstructure</div>
+    <div class="coh-row"><span class="coh-sign agree">agree</span>Clean trend energy. Skin elongates along tension axis. Connectors taut and short.</div>
+    <div class="coh-row"><span class="coh-sign diverg">diverg</span>Exhaustion forming. Connectors stretch. Price moving but book not following.</div>
+  </div>
+  <div class="coh-cell">
+    <div class="coh-pair">Price × Derivatives</div>
+    <div class="coh-row"><span class="coh-sign agree">agree</span>Conviction move. Vol surface confirms direction. Object expands with coherent shape.</div>
+    <div class="coh-row"><span class="coh-sign diverg">diverg</span>Tension spike. Options disagree with spot. Skin surface fractures along fault line.</div>
+  </div>
+  <div class="coh-cell">
+    <div class="coh-pair">Microstructure × On-chain</div>
+    <div class="coh-row"><span class="coh-sign agree">agree</span>Structural participation. Surface flow backed by deep wallet activity. Dense core.</div>
+    <div class="coh-row"><span class="coh-sign diverg">diverg</span>Surface vs deep split. Activity in book but wallets quiet — or reverse. Layered drift.</div>
+  </div>
+  <div class="coh-cell">
+    <div class="coh-pair">Social × Price</div>
+    <div class="coh-row"><span class="coh-sign agree">agree</span>Narrative-driven move. Crowd and structure aligned. Expansion with high turbulence.</div>
+    <div class="coh-row"><span class="coh-sign diverg">diverg</span>Crowd vs structure. Noise without conviction. Connectors between layers dim and long.</div>
+  </div>
+  <div class="coh-cell">
+    <div class="coh-pair">Social × Derivatives</div>
+    <div class="coh-row"><span class="coh-sign agree">agree</span>Positioned crowd. Retail and options market agree. High-energy compression before move.</div>
+    <div class="coh-row"><span class="coh-sign diverg">diverg</span>Narrative bifurcation. Crowd split, options hedging both sides. Skin surface roughens.</div>
+  </div>
+  <div class="coh-cell">
+    <div class="coh-pair">Macro × All layers</div>
+    <div class="coh-row"><span class="coh-sign agree">agree</span>Regime coherence. Background field aligned with object state. Long memory stable.</div>
+    <div class="coh-row"><span class="coh-sign diverg">diverg</span>Structural pressure. Macro pulling against local dynamics. Nominal gravity weakens.</div>
+  </div>
+</div>
+
+<h2>What results at object level</h2>
+<div class="results-grid">
+  <div class="res-cell">
+    <div class="res-title">Skin surface</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--teal)"></span>Smooth and tight — full cohesion, lowest energy state</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--amber)"></span>Elongated — tension between two dominant layers</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--coral)"></span>Fractured surface — multiple layers decoherent</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--gray)"></span>Contracted or absent — negative spectrum, withdrawal</div>
+  </div>
+  <div class="res-cell">
+    <div class="res-title">Connector lines</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--teal)"></span>Short and bright — streams in close agreement</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--amber)"></span>Long and fractal — streams pulling apart under tension</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--coral)"></span>Wildly lit — turbulence, liquidation cascade, rupture</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--gray)"></span>Dim and thin — silence, negative spectrum active</div>
+  </div>
+  <div class="res-cell">
+    <div class="res-title">Particle field</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--purple)"></span>Dense core — compression dominant, energy concentrating</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--blue)"></span>Dispersed arms — expansion, participation broadening</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--amber)"></span>Coherent drift — inertia high, regime persisting</div>
+    <div class="res-row"><span class="res-dot" style="background:var(--coral)"></span>Scattered — turbulence, autocorrelation collapsed</div>
+  </div>
+</div>
+
+<h2>Topology events — when cohesion breaks</h2>
+<div class="topo-grid">
+  <div class="topo-cell">
+    <div class="topo-swatch" style="background:var(--coral)"></div>
+    <div class="topo-name">Rupture</div>
+    <div class="topo-trigger">Two or more streams violently decohere simultaneously. Connector lines snap outward. Skin surface tears along the fault between layers.</div>
+    <div class="topo-result">Liquidation cascade · flash event · order book vacuum</div>
+  </div>
+  <div class="topo-cell">
+    <div class="topo-swatch" style="background:var(--purple)"></div>
+    <div class="topo-name">Fold</div>
+    <div class="topo-trigger">One axis inverts sign. The object folds through itself. A layer that was positive goes deeply negative while others hold. Regime reversal forming.</div>
+    <div class="topo-result">Trend exhaustion · distribution · narrative flip</div>
+  </div>
+  <div class="topo-cell">
+    <div class="topo-swatch" style="background:var(--teal)"></div>
+    <div class="topo-name">Collapse</div>
+    <div class="topo-trigger">All streams simultaneously compress toward center. The object shrinks to near its core. Connectors dim. Skin contracts to minimum. Eerie silence across all layers.</div>
+    <div class="topo-result">Liquidity void · pre-event stillness · participation withdrawal</div>
+  </div>
+  <div class="topo-cell">
+    <div class="topo-swatch" style="background:var(--amber)"></div>
+    <div class="topo-name">Bloom</div>
+    <div class="topo-trigger">Sudden outward expansion across all layers simultaneously — distinct from normal expansion by its speed and universality. Every stream lights up together. Discovery energy.</div>
+    <div class="topo-result">Price discovery · new participant inflow · narrative ignition</div>
+  </div>
+</div>
+
+<div class="memory-bar">
+  <div class="memory-title">Memory across all cohesion states</div>
+  <div class="memory-body">Each topology event leaves a structural fingerprint across all three memory layers. Short memory holds the immediate echo. Mid memory encodes the regime it occurred within. Long memory carries the constitutional imprint — so when the object approaches a configuration it has visited before, the gravitational pull of that prior state becomes part of the present geometry. The observer who has watched long enough will feel the rhyme before they can name it.</div>
+</div>
+
+</body>
+</html>
