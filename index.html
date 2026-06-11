@@ -804,5 +804,52 @@ function buildScene(scene,forSim){
   })();
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE REALTIME CONNECTION ───────────────────────────────────
+const SUPA_URL = 'https://vthnydupyvlnckvxicpk.supabase.co';
+const SUPA_KEY = 'sb_publishable_Na4PlwjpkYnopMlVoJAjpw_qVqtmst9';
+
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Subscribe to new state rows
+supa
+  .channel('states')
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'states',
+    filter: 'asset=eq.BTC'
+  }, (payload) => {
+    const s = payload.new;
+
+    // Map live state to dial positions
+    dialState[0] = Math.max(-10, Math.min(10, s.inertia));
+    dialState[1] = Math.max(-10, Math.min(10, s.tension));
+    dialState[2] = Math.max(-10, Math.min(10, s.compression));
+    dialState[3] = Math.max(-10, Math.min(10, s.expansion));
+    dialState[4] = Math.max(-10, Math.min(10, s.turbulence));
+    dialState[5] = Math.max(-10, Math.min(10, s.memory));
+
+    // Update dial visuals
+    for (let i = 0; i < 6; i++) {
+      document.getElementById(`di${i}`).value = dialState[i];
+      refreshDial(i);
+    }
+
+    refreshLbl();
+
+    // Update state label with live data
+    const lbl = document.getElementById('sim-lbl');
+    if (lbl) {
+      lbl.textContent = `BTC · Epoch ${s.epoch} · ${s.regime} · E:${s.energy}`;
+    }
+
+    console.log(`Live epoch ${s.epoch} | ${s.shape_id} | ${s.regime}`);
+  })
+  .subscribe();
+
+console.log('SupraScope live data connected');
+</script>
 </body>
 </html>
