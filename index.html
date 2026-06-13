@@ -1034,7 +1034,7 @@ function buildScene(scene,forSim){
   const{renderer,scene,camera}=makeRenderer('hero-canvas',null);
   window._renderers.push(renderer);
   window._scenes.push(scene);
-  camera.position.set(0,.8,2.8);
+  camera.position.set(0,.3,2.8);
   buildScene(scene,false);
   const d=makeDrag(document.getElementById('hero-canvas'),.12,0,3.0);
   let t=0;
