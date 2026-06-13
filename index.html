@@ -1034,9 +1034,10 @@ function buildScene(scene,forSim){
   const{renderer,scene,camera}=makeRenderer('hero-canvas',null);
   window._renderers.push(renderer);
   window._scenes.push(scene);
-  camera.position.set(0,.3,2.8);
+  camera.position.set(0,.15,2.8);
+  camera.lookAt(0,0,0);
   buildScene(scene,false);
-  const d=makeDrag(document.getElementById('hero-canvas'),.12,0,3.0);
+  const d=makeDrag(document.getElementById('hero-canvas'),.08,0,2.8);
   let t=0;
   (function tick(){requestAnimationFrame(tick);t+=.00055;
     if(!d.drag)d.setRY(d.rY+.0007);
@@ -1058,7 +1059,8 @@ function buildScene(scene,forSim){
     const h=document.getElementById('sim-wrap').offsetHeight;
     if(w>0&&h>0){ renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
   });
-  camera.position.set(0,.8,2.8);
+  camera.position.set(0,.15,2.8);
+  camera.lookAt(0,0,0);
 
   // Mutable scene refs — replaced on quality rebuild
   let galaxies,connObjs,skinData,skinMesh,wireframeMesh,skinNominal;
