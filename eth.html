@@ -158,11 +158,11 @@ nav{padding:14px 20px}
 <div class="bright-row">
 <span class="bright-lbl" style="width:28px;font-size:8px">ALL</span>
 <div class="bright-track" id="obt">
-<div class="bright-fill" id="obf" style="width:90%"></div>
-<div class="bright-thumb" id="obth" style="left:90%"></div>
-<input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="180" aria-label="Overall brightness">
+<div class="bright-fill" id="obf" style="width:100%"></div>
+<div class="bright-thumb" id="obth" style="left:100%"></div>
+<input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="200" aria-label="Overall brightness">
 </div>
-<span class="bright-val" id="obv">180%</span>
+<span class="bright-val" id="obv">200%</span>
 </div>
 <div id="layer-bright-container"></div>
 </div>
@@ -232,7 +232,7 @@ c.innerHTML='';
 STREAMS.forEach((s,i)=>{
 const row=document.createElement('div');
 row.className='bright-row';
-row.innerHTML=`<span class="bright-lbl">${String(i+1).padStart(2,'0')}</span><span class="bright-dot" style="background:${DCOLS[i]}"></span><div class="bright-track" id="lbt${i}"><div class="bright-fill" id="lbf${i}" style="width:75%"></div><div class="bright-thumb" id="lbth${i}" style="left:75%"></div><input type="range" class="bright-input" id="lb${i}" min="0" max="200" step="1" value="100" aria-label="Layer ${i+1} brightness"></div><span class="bright-val" id="lbv${i}">100%</span>`;
+row.innerHTML=`<span class="bright-lbl">${String(i+1).padStart(2,'0')}</span><span class="bright-dot" style="background:${DCOLS[i]}"></span><div class="bright-track" id="lbt${i}"><div class="bright-fill" id="lbf${i}" style="width:50%"></div><div class="bright-thumb" id="lbth${i}" style="left:50%"></div><input type="range" class="bright-input" id="lb${i}" min="0" max="200" step="1" value="100" aria-label="Layer ${i+1} brightness"></div><span class="bright-val" id="lbv${i}">100%</span>`;
 c.appendChild(row);
 document.getElementById(`lb${i}`).addEventListener('input',e=>{
 brightnessLayer[i]=parseFloat(e.target.value)/100;
@@ -272,11 +272,14 @@ function applySkimMode(){
 if(!skinRefs.mesh) return;
 if(skinMode==='off'){
 skinRefs.mesh.visible = false; skinRefs.wire.visible = false;
+if(skinRefs.inner) skinRefs.inner.visible = false;
 } else if(skinMode==='ghost'){
 skinRefs.mesh.visible = true; skinRefs.wire.visible = true;
+if(skinRefs.inner) skinRefs.inner.visible = true;
 skinRefs.mesh.material.opacity = 0.12; skinRefs.wire.material.opacity = 0.10;
 } else {
 skinRefs.mesh.visible = true; skinRefs.wire.visible = true;
+if(skinRefs.inner) skinRefs.inner.visible = true;
 }
 }
 
@@ -727,20 +730,6 @@ renderer.render(scene,camera);
 if(isMobile){ document.getElementById('ctrl-panel')?.classList.add('hidden'); }
 </script>
 
-<script>
-// ── THEME TOGGLE ──────────────────────────────────────────────────
-let isDark = true;
-function toggleTheme(){
-isDark = !isDark;
-document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-const btn = document.getElementById('theme-btn'); if(btn) btn.textContent = isDark ? 'Light' : 'Dark';
-const col = isDark ? 0x02020a : 0xf4f4fc;
-if(window._renderers) window._renderers.forEach(r => r.setClearColor(col, 1));
-if(window._scenes) window._scenes.forEach(s => { if(s.fog) s.fog.color.setHex(col); });
-document.body.style.background = isDark ? '' : '#f4f4fc';
-}
-</script>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ── SUPABASE REALTIME (ETH) ────────────────────────────────────────
@@ -750,10 +739,15 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 let liveStarted = false;
 let lastRegime = null;
+let lastEpoch = -Infinity;
 
 function clamp10(v){ return Math.max(-10, Math.min(10, parseFloat(v) || 0)); }
 
 function updateLiveState(s){
+// Ignore stale or duplicate epochs — keeps the cold-start seed and the
+// realtime stream from fighting each other regardless of arrival order.
+const ep = parseFloat(s.epoch);
+if(!isNaN(ep)){ if(ep <= lastEpoch) return; lastEpoch = ep; }
 // Write the incoming epoch into the shared dialState — drives the
 // object AND the dial readouts in one shot.
 dialState[0] = clamp10(s.inertia);
@@ -796,6 +790,22 @@ setTimeout(()=>notif.remove(), 4000);
 lastRegime = regime;
 }
 
+// Seed immediately with the most recent ETH epoch so the object is
+// populated on load instead of waiting up to one epoch (~15s) for the
+// next INSERT. Uses a plain fetch with an object header bag rather than
+// the supabase-js query builder: some fetch-hooking browser extensions
+// choke trying to structured-clone a Headers instance, which is what
+// the builder constructs internally.
+async function seedLatest(){
+try{
+const url = `${SUPA_URL}/rest/v1/states?select=*&asset=eq.ETH&order=epoch.desc&limit=1`;
+const res = await fetch(url, { headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY } });
+if(!res.ok){ console.debug('SupraScope seed skipped:', res.status); return; }
+const data = await res.json();
+if(Array.isArray(data) && data.length) updateLiveState(data[0]);
+}catch(e){ console.debug('SupraScope seed skipped (realtime will populate):', e && e.message); }
+}
+
 supa
 .channel('live-eth')
 .on('postgres_changes', {
@@ -808,12 +818,13 @@ updateLiveState(payload.new);
 })
 .subscribe((status) => {
 if(status === 'SUBSCRIBED'){
+console.log('SupraScope live · ETH · connected');
 const stEl = document.getElementById('lb-status');
 if(stEl && !liveStarted) stEl.textContent = 'Waiting';
 }
 });
 
-console.log('SupraScope live · ETH · connected');
+seedLatest();
 </script>
 </body>
 </html>
