@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupraScope — Market Structure Intelligence</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔭</text></svg>">
 <meta name="description" content="SupraScope transforms live market data into a structural object. Not a chart. Not a signal. A perception layer for humans and agents.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
@@ -37,7 +38,7 @@ nav{
   display:flex;align-items:center;justify-content:space-between;
   padding:16px 48px;
   background:rgba(248,248,252,0.95);
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--rim);
 }
 .nav-logo{font-family:var(--mono);font-size:13px;letter-spacing:.2em;color:var(--text);text-decoration:none;font-weight:700}
@@ -404,7 +405,7 @@ footer{
             <div class="bright-track" id="obt">
               <div class="bright-fill" id="obf" style="width:90%"></div>
               <div class="bright-thumb" id="obth" style="left:90%"></div>
-              <input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="180">
+              <input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="180" aria-label="Overall brightness">
             </div>
             <span class="bright-val" id="obv">180%</span>
           </div>
@@ -537,7 +538,7 @@ function buildBrightness(){
   STREAMS.forEach((s,i)=>{
     const row=document.createElement('div');
     row.className='bright-row';
-    row.innerHTML=`<span class="bright-lbl">${String(i+1).padStart(2,'0')}</span><span class="bright-dot" style="background:${DCOLS[i]}"></span><div class="bright-track" id="lbt${i}"><div class="bright-fill" id="lbf${i}" style="width:75%"></div><div class="bright-thumb" id="lbth${i}" style="left:75%"></div><input type="range" class="bright-input" id="lb${i}" min="0" max="200" step="1" value="100"></div><span class="bright-val" id="lbv${i}">100%</span>`;
+    row.innerHTML=`<span class="bright-lbl">${String(i+1).padStart(2,'0')}</span><span class="bright-dot" style="background:${DCOLS[i]}"></span><div class="bright-track" id="lbt${i}"><div class="bright-fill" id="lbf${i}" style="width:75%"></div><div class="bright-thumb" id="lbth${i}" style="left:75%"></div><input type="range" class="bright-input" id="lb${i}" min="0" max="200" step="1" value="100" aria-label="Layer ${i+1} brightness"></div><span class="bright-val" id="lbv${i}">100%</span>`;
     c.appendChild(row);
     document.getElementById(`lb${i}`).addEventListener('input',e=>{
       brightnessLayer[i]=parseFloat(e.target.value)/100;
@@ -1278,30 +1279,14 @@ function updateLiveState(s){
   dialState[3] = Math.max(-10, Math.min(10, s.expansion   || 0));
   dialState[4] = Math.max(-10, Math.min(10, s.turbulence  || 0));
   dialState[5] = Math.max(-10, Math.min(10, s.memory      || 0));
-
   for(let i=0;i<6;i++){
-    const el = document.getElementById(`di${i}`);
-    if(el) el.value = dialState[i];
+    const el=document.getElementById(`di${i}`);
+    if(el) el.value=dialState[i];
     refreshDial(i);
   }
-
-  // Update state label
-  const lbl = document.getElementById('sim-lbl');
-  if(lbl){
-    const regime = s.regime || 'nominal';
-    const desc   = REGIME_DESC[regime] || 'Structural activity';
-    lbl.textContent = `BTC · Epoch ${s.epoch} · ${regime} · E:${s.energy}`;
-  }
-
-  // Notify on regime change
-  if(lastRegime && lastRegime !== s.regime){
-    const notif = document.createElement('div');
-    notif.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(102,34,255,.9);color:#e0e0f0;font-family:Space Mono,monospace;font-size:10px;letter-spacing:.15em;padding:10px 20px;border-radius:3px;z-index:999;pointer-events:none;';
-    notif.textContent = `Regime → ${s.regime.replace(/_/g,' ')}`;
-    document.body.appendChild(notif);
-    setTimeout(()=>notif.remove(), 4000);
-  }
-  lastRegime = s.regime;
+  // Update regime banner + state card
+  updateRegimeBanner(s);
+  showChangeNotify(s);
 }
 
 supa
