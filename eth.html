@@ -137,13 +137,14 @@ const brightnessLayer   = new Array(6).fill(1.8);
 
 function buildBrightness(){
   // Overall slider
-  const obEl=document.getElementById('overall-bright'); if(obEl) obEl.addEventListener('input',e=>{
+  const obEl=document.getElementById('overall-bright');
+  if(obEl) obEl.addEventListener('input',e=>{
     brightnessOverall.val = parseFloat(e.target.value)/100;
     const pct = parseFloat(e.target.value)/2;
-    document.getElementById('obf').style.width  = pct+'%';
-    document.getElementById('obth').style.left  = pct+'%';
+    const obf=document.getElementById('obf'); if(obf) obf.style.width=pct+'%';
+    const obth=document.getElementById('obth'); if(obth) obth.style.left=pct+'%';
     const obv=document.getElementById('obv'); if(obv) obv.textContent=e.target.value+'%';
-  }); if(!obEl){}// guard
+  });
 
   // Per-layer sliders
   const c = document.getElementById('layer-bright-container');
@@ -630,8 +631,7 @@ function buildScene(scene,forSim){
 
 // ── SIMULATOR ──────────────────────────────────────────────────────
 (function(){
-  const simWrap=document.getElementById('sim-wrap');
-if(simWrap){
+  if(!document.getElementById('sim-canvas')) return;
 const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
   camera.position.set(0,.8,2.8);
 
@@ -662,8 +662,7 @@ const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
   }
 
   initScene();
-  simRefs.rebuild = initScene;
-} // expose to setQuality()
+  simRefs.rebuild = initScene; // expose to setQuality()
 
   const d=makeDrag(document.getElementById('sim-canvas').parentElement,.12,0,2.8);
   let t=0;
@@ -819,8 +818,6 @@ const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
     camera.position.z+=(d.z-camera.position.z)*.08;
     renderer.render(scene,camera);
   })();
-})();
-} // end sim guard
 </script>
 
 <script>
@@ -849,7 +846,7 @@ const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 
 function updateLiveState(s){
-  // Update dials from live data
+  if(typeof dialState === 'undefined') { updateRegimeBanner(s); showChangeNotify(s); return; }
   dialState[0] = Math.max(-10, Math.min(10, s.inertia     || 0));
   dialState[1] = Math.max(-10, Math.min(10, s.tension     || 0));
   dialState[2] = Math.max(-10, Math.min(10, s.compression || 0));
