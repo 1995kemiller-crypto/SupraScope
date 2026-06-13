@@ -9,12 +9,18 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
     --void:#02020a;--deep:#04040e;--surface:#09091a;--rim:#111128;
-    --muted:#252548;--text-dim:#484878;--text-mid:#7878b0;--text-bright:#e0e0f0;
+    --muted:#252548;--text-dim:#5858a0;--text-mid:#9090c8;--text-bright:#f0f0ff;
     --fd:'Space Mono',monospace;--fb:'Space Grotesk',sans-serif;
+    --bg-clear:rgba(2,2,10,0.98);
+  }
+  [data-theme="light"]{
+    --void:#f0f0f8;--deep:#e4e4f0;--surface:#d8d8ec;--rim:#c0c0dc;
+    --muted:#9090b8;--text-dim:#5050a0;--text-mid:#3030a0;--text-bright:#0a0a3a;
+    --bg-clear:rgba(240,240,248,0.98);
   }
   html{scroll-behavior:smooth}
   body{background:var(--void);color:var(--text-mid);font-family:var(--fb);font-size:16px;line-height:1.7;overflow-x:hidden}
-  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:linear-gradient(to bottom,rgba(2,2,10,.98),transparent)}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:linear-gradient(to bottom,var(--bg-clear),transparent)}
   .nav-logo{font-family:var(--fd);font-size:12px;letter-spacing:.25em;color:var(--text-bright);text-decoration:none}
   .nav-links{display:flex;gap:36px;list-style:none}
   .nav-links a{font-size:10px;letter-spacing:.18em;color:var(--text-dim);text-decoration:none;text-transform:uppercase;transition:color .3s}
@@ -115,69 +121,104 @@
     <li><a href="#mission">Mission</a></li>
   </ul>
 </nav>
+<button onclick="toggleTheme()" id="theme-btn" style="position:fixed;bottom:24px;right:24px;z-index:200;font-family:var(--fd);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);background:var(--surface);border:1px solid var(--rim);padding:8px 16px;cursor:pointer;transition:all .2s;border-radius:2px;box-shadow:0 2px 12px rgba(0,0,0,.4);">Light</button>
 
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
   <div class="hero-content">
-    <p class="hero-eyebrow">Built on Supra · Perceptual instrument</p>
+    <p class="hero-eyebrow">Built on Supra · Live BTC · 7 data layers</p>
     <h1 class="hero-title">Supra<span>Scope</span></h1>
-    <p class="hero-sub">A telescope pointed at the hidden geometry of markets. The patterns reveal themselves.</p>
+    <p class="hero-sub">Markets have shape.<br>Watch assets evolve through time.</p>
   </div>
-  <div class="hero-hint">Drag to rotate</div>
+  <div class="hero-hint">Drag · Scroll to zoom</div>
 </section>
 
 <section id="simulator">
-  <div style="max-width:1160px;margin:0 auto">
-    <p class="sec-label">Live object</p>
-    <h2 class="sec-title">The object emerges.</h2>
-    <p class="sec-body">Six streams stacked in the same space. The connecting lines reveal their relationships. The skin makes the shape explicit. Drag to feel the depth.</p>
-    <div class="sim-grid">
-      <div id="sim-wrap">
-        <canvas id="sim-canvas"></canvas>
-        <div class="sim-hud">
-          <span class="sim-state-lbl" id="sim-lbl">Nominal state · drag to rotate</span>
-          <div class="legend">
-            <div class="leg-row"><span class="leg-dot" style="background:#4477ff"></span>Price</div>
-            <div class="leg-row"><span class="leg-dot" style="background:#9944ff"></span>Microstructure</div>
-            <div class="leg-row"><span class="leg-dot" style="background:#ff4477"></span>Derivatives</div>
-            <div class="leg-row"><span class="leg-dot" style="background:#44ffbb"></span>On-chain</div>
-            <div class="leg-row"><span class="leg-dot" style="background:#ffbb44"></span>Social</div>
-            <div class="leg-row"><span class="leg-dot" style="background:#aaaadd"></span>Macro</div>
+  <div style="max-width:1400px;margin:0 auto">
+
+    <!-- REGIME BANNER -->
+    <div id="regime-banner" style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border:1px solid var(--rim);margin-bottom:16px;border-radius:4px;">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <span style="font-family:var(--fd);font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;">BTC · LIVE</span>
+        <span id="regime-label" style="font-family:var(--fd);font-size:13px;color:var(--text-bright);letter-spacing:.05em;">nominal</span>
+        <span id="regime-desc" style="font-size:12px;color:var(--text-dim);font-weight:300;">Market structure in equilibrium</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:24px;">
+        <span id="epoch-label" style="font-family:var(--fd);font-size:9px;color:var(--muted);letter-spacing:.15em;">EPOCH —</span>
+        <span id="energy-label" style="font-family:var(--fd);font-size:9px;color:var(--muted);letter-spacing:.15em;">E:—</span>
+        <button onclick="toggleAdvanced()" id="adv-btn" style="font-family:var(--fd);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);background:none;border:1px solid var(--rim);padding:6px 14px;cursor:pointer;border-radius:2px;transition:all .2s;">Advanced</button>
+      </div>
+    </div>
+
+    <!-- CHANGE NOTIFICATION -->
+    <div id="change-notify" style="display:none;padding:10px 24px;background:rgba(102,34,255,.08);border:1px solid rgba(102,34,255,.3);border-radius:4px;margin-bottom:16px;font-family:var(--fd);font-size:10px;color:#9966ff;letter-spacing:.12em;"></div>
+
+    <!-- MAIN OBJECT — full width -->
+    <div style="position:relative;width:100%;aspect-ratio:4/3;background:var(--void);border:1px solid var(--rim);border-radius:4px;overflow:hidden;margin-bottom:16px;">
+      <canvas id="sim-canvas" style="width:100%;height:100%;display:block;cursor:grab;"></canvas>
+
+      <!-- stream labels top left -->
+      <div style="position:absolute;top:14px;left:14px;display:flex;flex-direction:column;gap:3px;pointer-events:none;">
+        <div style="font-family:var(--fd);font-size:8px;letter-spacing:.14em;color:#4477ffaa;text-transform:uppercase;">Price</div>
+        <div style="font-family:var(--fd);font-size:8px;letter-spacing:.14em;color:#9944ffaa;text-transform:uppercase;">Microstructure</div>
+        <div style="font-family:var(--fd);font-size:8px;letter-spacing:.14em;color:#ff4477aa;text-transform:uppercase;">Derivatives</div>
+        <div style="font-family:var(--fd);font-size:8px;letter-spacing:.14em;color:#44ffbbaa;text-transform:uppercase;">On-chain</div>
+        <div style="font-family:var(--fd);font-size:8px;letter-spacing:.14em;color:#ffaa33aa;text-transform:uppercase;">Social</div>
+        <div style="font-family:var(--fd);font-size:8px;letter-spacing:.14em;color:#aaaadd88;text-transform:uppercase;">Macro</div>
+      </div>
+
+      <!-- hint bottom left -->
+      <div style="position:absolute;bottom:14px;left:14px;font-family:var(--fd);font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;pointer-events:none;">Drag · Scroll to zoom</div>
+    </div>
+
+    <!-- ADVANCED PANEL — hidden by default -->
+    <div id="advanced-panel" style="display:none;background:var(--surface);border:1px solid var(--rim);border-radius:4px;padding:20px 24px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">
+
+        <!-- Force field -->
+        <div>
+          <div style="font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;">Force field</div>
+          <div id="dials-container"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+            <span style="font-family:var(--fd);font-size:9px;letter-spacing:.18em;color:var(--muted);">−10 · 0 · +10</span>
+            <button class="btn-reset" onclick="resetDials()">Reset</button>
           </div>
         </div>
-      </div>
-      <div class="dials-panel">
-        <div class="dials-head">Force field</div>
-        <div id="dials-container"></div>
-        <div class="dials-foot">
-          <span class="dials-range">−10 · 0 · +10</span>
-          <button class="btn-reset" onclick="resetDials()">Reset</button>
+
+        <!-- Quality + Skin -->
+        <div>
+          <div style="font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;">Quality</div>
+          <div class="quality-bar" id="quality-bar" style="margin-bottom:16px;">
+            <button class="q-btn" id="q-eco" onclick="setQuality('eco')">Eco</button>
+            <button class="q-btn active" id="q-mid" onclick="setQuality('mid')">Mid</button>
+            <button class="q-btn" id="q-ultra" onclick="setQuality('ultra')">Ultra</button>
+          </div>
+          <div style="font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;">Skin</div>
+          <div class="skin-bar">
+            <button class="skin-btn active" id="sk-solid" onclick="setSkin('solid')">Solid</button>
+            <button class="skin-btn" id="sk-ghost" onclick="setSkin('ghost')">Ghost</button>
+            <button class="skin-btn" id="sk-off" onclick="setSkin('off')">Off</button>
+          </div>
         </div>
-        <div class="quality-bar" id="quality-bar">
-          <button class="q-btn" id="q-eco"   onclick="setQuality('eco')">Eco</button>
-          <button class="q-btn active" id="q-mid"   onclick="setQuality('mid')">Mid</button>
-          <button class="q-btn" id="q-ultra" onclick="setQuality('ultra')">Ultra</button>
-        </div>
-        <div class="skin-bar">
-          <button class="skin-btn active" id="sk-solid" onclick="setSkin('solid')">Solid</button>
-          <button class="skin-btn"        id="sk-ghost" onclick="setSkin('ghost')">Ghost</button>
-          <button class="skin-btn"        id="sk-off"   onclick="setSkin('off')">Off</button>
-        </div>
-        <div class="bright-section">
-          <div class="bright-head">Brightness</div>
+
+        <!-- Brightness -->
+        <div>
+          <div style="font-family:var(--fd);font-size:9px;letter-spacing:.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;">Brightness</div>
           <div class="bright-row" id="overall-bright-row">
             <span class="bright-lbl" style="width:28px;font-size:8px;color:var(--text-dim)">ALL</span>
             <div class="bright-track" id="obt">
-              <div class="bright-fill" id="obf" style="width:75%"></div>
-              <div class="bright-thumb" id="obth" style="left:75%"></div>
-              <input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="100">
+              <div class="bright-fill" id="obf" style="width:100%"></div>
+              <div class="bright-thumb" id="obth" style="left:100%"></div>
+              <input type="range" class="bright-input" id="overall-bright" min="0" max="200" step="1" value="200">
             </div>
-            <span class="bright-val" id="obv">100%</span>
+            <span class="bright-val" id="obv">200%</span>
           </div>
           <div id="layer-bright-container"></div>
         </div>
+
       </div>
     </div>
+
   </div>
 </section>
 
@@ -209,28 +250,34 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script>
+// ── GLOBALS ───────────────────────────────────────────────────────
+window._renderers = [];
+window._scenes = [];
+
 // ── QUALITY TIERS ─────────────────────────────────────────────────
 // eco = mobile low-power  |  mid = default  |  ultra = desktop high-fidelity
 const QUALITY_TIERS = {
   eco:   { mul:0.18, ptSize:0.018, connRate:0.012, skinDetail:1, fogDensity:0.55, label:'Eco'   },
   mid:   { mul:0.55, ptSize:0.014, connRate:0.042, skinDetail:3, fogDensity:0.42, label:'Mid'   },
-  ultra: { mul:1.00, ptSize:0.011, connRate:0.075, skinDetail:4, fogDensity:0.30, label:'Ultra' },
+  ultra: { mul:1.00, ptSize:0.011, connRate:0.075, skinDetail:5, fogDensity:0.22, label:'Ultra' },
 };
 
 // Auto-detect starting tier
 const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 600;
-let currentQuality = isMobile ? 'eco' : 'mid';
+let currentQuality = isMobile ? 'eco' : 'ultra';
 const quality = { get cfg(){ return QUALITY_TIERS[currentQuality]; } };
 
 // ── STREAM CONFIG ──────────────────────────────────────────────────
 const STREAM_BASE = [
-  { name:'Price',          r:0.27, g:0.47, b:1.00, baseCount:500, layerZ: 0.00, armN:3, spread:1.0 },
-  { name:'Microstructure', r:0.60, g:0.27, b:1.00, baseCount:420, layerZ: 0.09, armN:2, spread:0.95},
-  { name:'Derivatives',    r:1.00, g:0.27, b:0.47, baseCount:420, layerZ:-0.09, armN:3, spread:1.0 },
-  { name:'On-chain',       r:0.27, g:1.00, b:0.73, baseCount:360, layerZ: 0.16, armN:2, spread:0.90},
-  { name:'Social',         r:1.00, g:0.73, b:0.27, baseCount:360, layerZ:-0.16, armN:2, spread:0.88},
-  { name:'Macro',          r:0.67, g:0.67, b:0.87, baseCount:280, layerZ: 0.22, armN:1, spread:0.82},
+  // Each stream has unique personality — arm count, spread, rotation, core size
+  { name:'Price',          r:0.27, g:0.47, b:1.00, baseCount:1000, layerZ:0, layerY: 0.00, armN:3, spread:1.40, tiltX:0, tiltY:0, rotOff:0.0,  coreSize:0.12, armTight:0.55 },
+  { name:'Microstructure', r:0.60, g:0.27, b:1.00, baseCount:850,  layerZ:0, layerY: 0.11, armN:4, spread:1.10, tiltX:0, tiltY:0, rotOff:0.4,  coreSize:0.06, armTight:0.70 },
+  { name:'Derivatives',    r:1.00, g:0.27, b:0.47, baseCount:850,  layerZ:0, layerY:-0.11, armN:2, spread:1.50, tiltX:0, tiltY:0, rotOff:0.9,  coreSize:0.18, armTight:0.45 },
+  { name:'On-chain',       r:0.27, g:1.00, b:0.73, baseCount:700,  layerZ:0, layerY: 0.22, armN:5, spread:0.95, tiltX:0, tiltY:0, rotOff:0.2,  coreSize:0.08, armTight:0.80 },
+  { name:'Social',         r:1.00, g:0.73, b:0.27, baseCount:700,  layerZ:0, layerY:-0.22, armN:2, spread:1.30, tiltX:0, tiltY:0, rotOff:1.2,  coreSize:0.14, armTight:0.50 },
+  { name:'Macro',          r:0.67, g:0.67, b:0.87, baseCount:600,  layerZ:0, layerY: 0.33, armN:1, spread:1.60, tiltX:0, tiltY:0, rotOff:0.6,  coreSize:0.22, armTight:0.35 },
 ];
 
 // Build STREAMS with counts scaled to quality
@@ -241,8 +288,8 @@ let STREAMS = getStreams();
 const DCOLS=['#4477ff','#9944ff','#ff4477','#44ffbb','#ffbb44','#aaaadd'];
 
 // ── BRIGHTNESS STATE ──────────────────────────────────────────────
-const brightnessOverall = {val:1.0}; // 0–2
-const brightnessLayer   = new Array(6).fill(1.0);
+const brightnessOverall = {val:2.0}; // 0–2 — boot at 200%
+const brightnessLayer   = new Array(6).fill(1.8);
 
 function buildBrightness(){
   // Overall slider
@@ -273,6 +320,75 @@ function buildBrightness(){
 }
 buildBrightness();
 
+// ── REGIME DESCRIPTIONS ────────────────────────────────────────────
+const REGIME_DESC = {
+  nominal:              'Market structure in equilibrium',
+  expanding_coherent:   'Energy entering — all streams aligned',
+  expanding_fragmented: 'Expansion with layer divergence',
+  compressing:          'Participation contracting',
+  high_tension:         'Opposing forces — structural stress',
+  turbulent:            'Coherence breakdown — high volatility',
+  eerie_coherent:       'Unnatural stillness — pre-transition',
+  memory_active:        'Historical pattern recognized',
+  novel_territory:      'No strong historical match',
+  pre_topology:         'Topology event conditions forming',
+  active:               'Structural activity above baseline',
+};
+
+function updateRegimeBanner(s){
+  const label = document.getElementById('regime-label');
+  const desc  = document.getElementById('regime-desc');
+  const epoch = document.getElementById('epoch-label');
+  const energy = document.getElementById('energy-label');
+  if(label) label.textContent = s.regime || 'nominal';
+  if(desc)  desc.textContent  = REGIME_DESC[s.regime] || 'Structural activity';
+  if(epoch) epoch.textContent = `EPOCH ${s.epoch}`;
+  if(energy) energy.textContent = `E:${s.energy}`;
+
+  // Color regime label by energy
+  const e = parseFloat(s.energy) || 0;
+  const col = e < 1.5 ? '#484878' : e < 3 ? '#9944ff' : e < 5 ? '#ff9944' : '#ff4444';
+  if(label) label.style.color = col;
+}
+
+// ── WHAT CHANGED NOTIFICATION ──────────────────────────────────────
+let lastRegime = null;
+let lastShapeId = null;
+let notifyTimer = null;
+
+function showChangeNotify(s){
+  const el = document.getElementById('change-notify');
+  if(!el) return;
+  const messages = [];
+  if(lastRegime && lastRegime !== s.regime){
+    messages.push(`Regime shift → ${s.regime.replace(/_/g,' ')}`);
+  }
+  if(parseFloat(s.inertia) > 3)  messages.push('Inertia high — regime entrenching');
+  if(parseFloat(s.tension) > 4)  messages.push('Tension elevated — opposing forces');
+  if(parseFloat(s.turbulence) > 4) messages.push('Turbulence rising — coherence breaking');
+  if(parseFloat(s.expansion) > 4) messages.push('Expansion strong — energy entering');
+  if(parseFloat(s.compression) > 4) messages.push('Compression dominant — participation thinning');
+
+  if(messages.length > 0){
+    el.textContent = messages.join(' · ');
+    el.style.display = 'block';
+    if(notifyTimer) clearTimeout(notifyTimer);
+    notifyTimer = setTimeout(()=>{ el.style.display='none'; }, 8000);
+  }
+  lastRegime  = s.regime;
+  lastShapeId = s.shape_id;
+}
+
+// ── ADVANCED PANEL TOGGLE ──────────────────────────────────────────
+let advancedOpen = false;
+function toggleAdvanced(){
+  advancedOpen = !advancedOpen;
+  const panel = document.getElementById('advanced-panel');
+  const btn   = document.getElementById('adv-btn');
+  if(panel) panel.style.display = advancedOpen ? 'block' : 'none';
+  if(btn)   btn.style.color     = advancedOpen ? 'var(--text-bright)' : 'var(--text-dim)';
+}
+
 // ── QUALITY SWITCHER ───────────────────────────────────────────────
 // Scene rebuild refs — populated when simulator starts
 const simRefs = { rebuild: null };
@@ -295,7 +411,7 @@ if(isMobile){
 }
 
 // ── SKIN TOGGLE ────────────────────────────────────────────────────
-let skinMode = 'solid'; // solid | ghost | off
+let skinMode = 'ghost'; // solid | ghost | off — boot at ghost
 const skinRefs = { mesh:null, wire:null };
 
 function setSkin(mode){
@@ -314,8 +430,8 @@ function applySkimMode(){
   } else if(skinMode==='ghost'){
     skinRefs.mesh.visible = true;
     skinRefs.wire.visible = true;
-    skinRefs.mesh.material.opacity = 0.04;
-    skinRefs.wire.material.opacity = 0.04;
+    skinRefs.mesh.material.opacity = 0.12;
+    skinRefs.wire.material.opacity = 0.10;
   } else {
     skinRefs.mesh.visible = true;
     skinRefs.wire.visible = true;
@@ -369,29 +485,39 @@ function buildGalaxy(cfg){
   const pos=new Float32Array(n*3);
   const col=new Float32Array(n*3);
   const nom=new Float32Array(n*3);
-  const tiltQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(cfg.layerZ*.35,cfg.layerZ*.2,0));
+  const tiltX = cfg.tiltX || 0;
+  const tiltY = cfg.tiltY || 0;
+  const tiltQ=new THREE.Quaternion().setFromEuler(new THREE.Euler(tiltX, tiltY, tiltX*0.3));
   for(let i=0;i<n;i++){
     let x,y,z;
-    if(Math.random()<0.10){
-      const cr=Math.abs(gaussRand())*0.10;
+    const coreSize  = cfg.coreSize  || 0.10;
+    const armTight  = cfg.armTight  || 0.55;
+    const rotOff    = cfg.rotOff    || 0;
+    if(Math.random()<0.12){
+      // Core — size varies per stream
+      const cr=Math.abs(gaussRand())*coreSize;
       const ca=Math.random()*Math.PI*2;
-      x=Math.cos(ca)*cr;y=(Math.random()-.5)*.025;z=Math.sin(ca)*cr;
+      x=Math.cos(ca)*cr;y=(Math.random()-.5)*.006;z=Math.sin(ca)*cr;
     } else {
       const arm=Math.floor(Math.random()*cfg.armN);
-      const t=Math.pow(Math.random(),.55);
-      const angle=(arm/cfg.armN)*Math.PI*2+t*Math.PI*2+(Math.random()-.5)*.28;
-      const radius=0.08+t*cfg.spread*.62;
-      const scatter=(1-t*.6)*.05;
+      const t=Math.pow(Math.random(), armTight);
+      // rotOff rotates this stream's arms so they don't all align
+      const angle=(arm/cfg.armN)*Math.PI*2 + t*Math.PI*2.4 + rotOff + (Math.random()-.5)*.32;
+      const radius=0.06+t*cfg.spread*.65;
+      // scatter varies — tight streams vs loose
+      const scatter=(1-t*.55)*(0.03+cfg.spread*.02);
       x=Math.cos(angle)*radius+(Math.random()-.5)*scatter;
-      y=(Math.random()-.5)*.03*(1-t*.65);
+      y=(Math.random()-.5)*.008*(1-t*.8);
       z=Math.sin(angle)*radius+(Math.random()-.5)*scatter;
     }
     const v=new THREE.Vector3(x,y,z).applyQuaternion(tiltQ);
-    v.z+=cfg.layerZ;
+    const dist=Math.sqrt(v.x*v.x+v.z*v.z);
+    v.z += (cfg.layerZ || 0);
     pos[i*3]=v.x;pos[i*3+1]=v.y;pos[i*3+2]=v.z;
     nom[i*3]=v.x;nom[i*3+1]=v.y;nom[i*3+2]=v.z;
-    const dist=Math.sqrt(v.x*v.x+v.z*v.z);
-    const bright=Math.max(0.25,1-dist/cfg.spread*.45)*(0.55+Math.random()*.45);
+    const cs = cfg.coreSize || 0.12;
+    const coreBoost = dist < cs ? 2.2 : dist < cs*2 ? 1.4 : 1.0;
+    const bright=Math.max(0.22,1-dist/cfg.spread*.48)*(0.5+Math.random()*.5)*coreBoost;
     col[i*3]=cfg.r*bright;col[i*3+1]=cfg.g*bright;col[i*3+2]=cfg.b*bright;
   }
   return{pos,col,nom,n};
@@ -406,7 +532,7 @@ function buildSkin(galaxies){
   // Collect a sample of all particle positions
   const allPts=[];
   galaxies.forEach(g=>{
-    const step=Math.max(1,Math.floor(g.n/60));
+    const step=Math.max(1,Math.floor(g.n/120));
     for(let i=0;i<g.n;i+=step){
       allPts.push(new THREE.Vector3(g.pos[i*3],g.pos[i*3+1],g.pos[i*3+2]));
     }
@@ -427,15 +553,15 @@ function buildSkin(galaxies){
     const dir=new THREE.Vector3(posAttr.getX(i),posAttr.getY(i),posAttr.getZ(i)).normalize();
 
     // Find furthest point in this direction
-    let maxProj=0.5;
+    // Use true max extent so skin covers ALL particle fields
+    let maxProj = 0.5;
     allPts.forEach(p=>{
       const rel=p.clone().sub(centroid);
       const proj=rel.dot(dir);
-      if(proj>maxProj)maxProj=proj;
+      if(proj>maxProj) maxProj=proj;
     });
-
-    // Set vertex to that extent + small padding for skin feel
-    const r=maxProj*1.08;
+    // 12% padding — skin generously wraps all layers
+    const r=maxProj*1.12;
     posAttr.setXYZ(i,
       centroid.x+dir.x*r,
       centroid.y+dir.y*r,
@@ -446,27 +572,37 @@ function buildSkin(galaxies){
 
   // Skin material — translucent, spectral-tinted, double-sided
   const mat=new THREE.MeshPhongMaterial({
-    color: new THREE.Color(0.35,0.25,0.90),
-    emissive: new THREE.Color(0.08,0.04,0.22),
-    specular: new THREE.Color(0.6,0.5,1.0),
-    shininess:55,
+    color: new THREE.Color(0.40,0.20,1.00),
+    emissive: new THREE.Color(0.12,0.05,0.30),
+    specular: new THREE.Color(0.8,0.7,1.0),
+    shininess:120,
     transparent:true,
-    opacity:0.10,
+    opacity:0.06,
     side:THREE.DoubleSide,
     depthWrite:false,
     wireframe:false
   });
 
-  // Wireframe overlay for the skin — shows the mesh topology
-  const wireMat=new THREE.MeshBasicMaterial({
-    color:new THREE.Color(0.40,0.30,1.0),
+  // Inner glow layer — second mesh slightly smaller
+  const innerMat=new THREE.MeshPhongMaterial({
+    color: new THREE.Color(0.60,0.30,1.00),
+    emissive: new THREE.Color(0.20,0.08,0.45),
     transparent:true,
-    opacity:0.08,
+    opacity:0.04,
+    side:THREE.BackSide,
+    depthWrite:false,
+  });
+
+  // Wireframe overlay — denser, more complex topology visible
+  const wireMat=new THREE.MeshBasicMaterial({
+    color:new THREE.Color(0.50,0.35,1.0),
+    transparent:true,
+    opacity:0.10,
     wireframe:true,
     depthWrite:false
   });
 
-  return{geo,mat,wireMat,posAttr,centroid,count};
+  return{geo,mat,wireMat,innerMat,posAttr,centroid,count};
 }
 
 // ── CONNECTORS ────────────────────────────────────────────────────
@@ -500,12 +636,12 @@ function makeRenderer(canvasId,wrapId){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.setClearColor(0x02020a,1);
   const scene=new THREE.Scene();
-  scene.fog=new THREE.FogExp2(0x02020a,0.42);
+  scene.fog=new THREE.FogExp2(0x02020a,0.35);
   const camera=new THREE.PerspectiveCamera(52,1,.01,100);
   function resize(){
-    const w=wrap?wrap.clientWidth:canvas.offsetWidth;
-    const h=wrap?wrap.clientHeight:canvas.offsetHeight;
-    renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();
+    const w=canvas.offsetWidth||800;
+    const h=canvas.offsetHeight||450;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
   }
   resize();window.addEventListener('resize',resize);
   return{renderer,scene,camera};
@@ -527,7 +663,7 @@ function makeDrag(el,initRX,initRY,initZ){
   el.addEventListener('wheel',e=>{
     e.preventDefault();
     z+=e.deltaY*.004;
-    z=Math.max(.6,Math.min(6.0,z));
+    z=Math.max(.4,Math.min(8.0,z));
   },{passive:false});
 
   // Pinch zoom
@@ -543,7 +679,7 @@ function makeDrag(el,initRX,initRY,initZ){
     if(e.touches.length===2&&pinchDist0!==null){
       const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
       z-=(dist-pinchDist0)*.008;
-      z=Math.max(.6,Math.min(6.0,z));
+      z=Math.max(.4,Math.min(8.0,z));
       pinchDist0=dist;
     } else if(drag){
       rY+=(e.touches[0].clientX-px)*.005;rX+=(e.touches[0].clientY-py)*.005;
@@ -553,6 +689,21 @@ function makeDrag(el,initRX,initRY,initZ){
 
   return{get rX(){return rX},get rY(){return rY},get z(){return z},get drag(){return drag},setRY(v){rY=v}};
 }
+
+// ── SPRITE TEXTURE ────────────────────────────────────────────────
+function makeSprite(){
+  const c=document.createElement('canvas');
+  c.width=c.height=64;
+  const ctx=c.getContext('2d');
+  const g=ctx.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(0.4,'rgba(255,255,255,0.8)');
+  g.addColorStop(0.8,'rgba(255,255,255,0.2)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+let SPRITE_TEX = null;
 
 // ── SCENE BUILDER ──────────────────────────────────────────────────
 function buildScene(scene,forSim){
@@ -573,10 +724,14 @@ function buildScene(scene,forSim){
     geo.setAttribute('position',new THREE.BufferAttribute(g.pos.slice(),3));
     geo.setAttribute('color',new THREE.BufferAttribute(g.col,3));
     const mat=new THREE.PointsMaterial({
-      size:forSim?.014:.011,
+      size:forSim?.018:.014,
       vertexColors:true,transparent:true,
-      opacity:forSim?.95:.80,
-      sizeAttenuation:true,depthWrite:false
+      opacity:forSim?.92:.78,
+      sizeAttenuation:true,depthWrite:false,
+      map:SPRITE_TEX||makeSprite(),
+      alphaMap:SPRITE_TEX||makeSprite(),
+      alphaTest:0.01,
+      blending:THREE.AdditiveBlending,
     });
     const pts=new THREE.Points(geo,mat);
     scene.add(pts);
@@ -596,7 +751,7 @@ function buildScene(scene,forSim){
     const geo=new THREE.BufferGeometry();
     geo.setAttribute('position',new THREE.BufferAttribute(pos.slice(),3));
     geo.setAttribute('color',new THREE.BufferAttribute(col,3));
-    const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:forSim?.28:.18,depthWrite:false});
+    const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:forSim?.35:.22,depthWrite:false});
     const lines=new THREE.LineSegments(geo,mat);
     scene.add(lines);
     if(forSim)connObjs.push({geo,mat,nomPos:pos.slice(),ai,bi});
@@ -606,21 +761,27 @@ function buildScene(scene,forSim){
   const skin=buildSkin(galaxies);
   const skinMesh=new THREE.Mesh(skin.geo,skin.mat);
   scene.add(skinMesh);
+  // Inner glow mesh — scaled slightly inward
+  const innerMesh=new THREE.Mesh(skin.geo.clone(),skin.innerMat);
+  innerMesh.scale.setScalar(0.92);
+  scene.add(innerMesh);
   const wireframeMesh=new THREE.Mesh(skin.geo.clone(),skin.wireMat);
   scene.add(wireframeMesh);
 
-  return{galaxies,connObjs,skinData:skin,skinMesh,wireframeMesh};
+  return{galaxies,connObjs,skinData:skin,skinMesh,wireframeMesh,innerMesh};
 }
 
 // ── HERO ───────────────────────────────────────────────────────────
 (function(){
   const{renderer,scene,camera}=makeRenderer('hero-canvas',null);
-  camera.position.set(0,.18,2.6);
+  window._renderers.push(renderer);
+  window._scenes.push(scene);
+  camera.position.set(0,.8,2.8);
   buildScene(scene,false);
-  const d=makeDrag(document.getElementById('hero-canvas'),.10,0,2.6);
+  const d=makeDrag(document.getElementById('hero-canvas'),.12,0,3.0);
   let t=0;
-  (function tick(){requestAnimationFrame(tick);t+=.00025;
-    if(!d.drag)d.setRY(d.rY+.00035);
+  (function tick(){requestAnimationFrame(tick);t+=.00055;
+    if(!d.drag)d.setRY(d.rY+.0007);
     scene.rotation.x=d.rX;scene.rotation.y=d.rY+t;
     camera.position.z+=(d.z-camera.position.z)*.08;
     renderer.render(scene,camera);
@@ -630,7 +791,7 @@ function buildScene(scene,forSim){
 // ── SIMULATOR ──────────────────────────────────────────────────────
 (function(){
   const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
-  camera.position.set(0,.18,2.6);
+  camera.position.set(0,.8,2.8);
 
   // Mutable scene refs — replaced on quality rebuild
   let galaxies,connObjs,skinData,skinMesh,wireframeMesh,skinNominal;
@@ -652,19 +813,20 @@ function buildScene(scene,forSim){
     // Register skin refs for toggle
     skinRefs.mesh = skinMesh;
     skinRefs.wire = wireframeMesh;
+    skinRefs.inner = built.innerMesh || null;
     applySkimMode();
     // Apply fog density for quality
-    scene.fog=new THREE.FogExp2(0x02020a,quality.cfg.fogDensity);
+    scene.fog=new THREE.FogExp2(0x02020a,quality.cfg.fogDensity * 0.5);
   }
 
   initScene();
   simRefs.rebuild = initScene; // expose to setQuality()
 
-  const d=makeDrag(document.getElementById('sim-wrap'),.10,0,2.6);
+  const d=makeDrag(document.getElementById('sim-canvas').parentElement,.12,0,2.8);
   let t=0;
 
   (function tick(){
-    requestAnimationFrame(tick);t+=.00025;
+    requestAnimationFrame(tick);t+=.00055;
 
     const inertia    =dialState[0];
     const tension    =dialState[1];
@@ -681,7 +843,7 @@ function buildScene(scene,forSim){
       if(!g.geo)return;
       const arr=g.geo.attributes.position.array;
       const nom=g.pos;const n=g.n;const ss=.85+si*.06;
-      const memF=(.012+Math.max(0,memory)*.009)*inertDamp;
+      const memF=(.015+Math.max(0,memory)*.009)*inertDamp;
       const compF=compression*.00055*ss*inertDamp;
       const expF=expansion*.00055*ss*inertDamp;
       const tenF=tension*.00065*ss*inertDamp;
@@ -695,6 +857,8 @@ function buildScene(scene,forSim){
         x+=(x/len)*expF;y+=(y/len)*expF;z+=(z/len)*expF;
         y+=y*tenF;x-=x*tenF*.25;z-=z*tenF*.25;
         x+=tw;
+        x+=Math.sin(t*0.8+nom[ix]*4+t)*0.0006;
+        z+=Math.sin(t*0.7+nom[iz]*4+t*0.9)*0.0006;
         arr[ix]=x;arr[iy]=y;arr[iz]=z;
       }
       g.geo.attributes.position.needsUpdate=true;
@@ -713,7 +877,7 @@ function buildScene(scene,forSim){
       const compF=compression*.00045*inertDamp;
       const expF=expansion*.00045*inertDamp;
       const tenF=tension*.00055*inertDamp;
-      const tw=Math.sin(t*1.1+co.ai*.95)*turbulence*.00045*inertDamp;
+      const tw=Math.sin(t*1.1+co.ai*.95)*turbulence*.00045*inertDamp + Math.sin(t*0.6+co.ai)*0.0005;
       for(let i=0;i<nL;i++){
         for(let e=0;e<2;e++){
           const b=i*6+e*3;
@@ -766,19 +930,24 @@ function buildScene(scene,forSim){
     // Skin opacity responds to state (only in solid mode)
     const mag=Math.sqrt(dialState.reduce((s,v)=>s+v*v,0));
     if(skinMode==='solid'){
-      const baseOpacity=.10+expansion*.008-compression*.005;
-      skinMesh.material.opacity=Math.max(.02,Math.min(.35,(baseOpacity+mag*.006)*brightnessOverall.val));
+      const baseOpacity=.12+expansion*.012-compression*.007;
+      skinMesh.material.opacity=Math.max(.03,Math.min(.45,(baseOpacity+mag*.009)*brightnessOverall.val));
     } else if(skinMode==='ghost'){
-      skinMesh.material.opacity=0.04;
+      skinMesh.material.opacity=0.05;
+      if(skinRefs.inner) skinRefs.inner.material.opacity=0.03;
     }
     // Skin color shifts with dominant force
     const warmth=(tension+expansion)/20;
     const cold=(-tension+compression)/20;
-    skinMesh.material.color.setRGB(
-      .35+Math.max(0,warmth)*.4,
-      .25+Math.abs(turbulence/10)*.15,
-      .90-Math.max(0,warmth)*.3+Math.max(0,cold)*.1
-    );
+    const skinR = .35+Math.max(0,warmth)*.60;
+    const skinG = .18+Math.abs(turbulence/10)*.25;
+    const skinB = .98-Math.max(0,warmth)*.45+Math.max(0,cold)*.18;
+    skinMesh.material.color.setRGB(skinR,skinG,skinB);
+    skinMesh.material.emissive.setRGB(skinR*.18,skinG*.08,skinB*.28);
+    if(skinRefs.inner){
+      skinRefs.inner.material.color.setRGB(skinR*.8,skinG*.5,skinB);
+      skinRefs.inner.material.emissive.setRGB(skinR*.25,skinG*.10,skinB*.35);
+    }
     skinMesh.material.emissive.setRGB(
       (.08+Math.max(0,warmth)*.12)*skinMesh.material.opacity*3,
       .04*skinMesh.material.opacity*3,
@@ -787,69 +956,102 @@ function buildScene(scene,forSim){
 
     // Wireframe opacity
     if(skinMode==='solid'){
-      wireframeMesh.material.opacity=Math.min(.5,(.06+Math.abs(turbulence)*.012)*brightnessOverall.val);
+      wireframeMesh.material.opacity=Math.min(.6,(.08+Math.abs(turbulence)*.018)*brightnessOverall.val);
     } else if(skinMode==='ghost'){
-      wireframeMesh.material.opacity=0.04;
+      wireframeMesh.material.opacity=0.06;
     }
 
     // Copy deformed geometry to wireframe
     const wArr=wireframeMesh.geometry.attributes.position.array;
     wArr.set(skinArr);
     wireframeMesh.geometry.attributes.position.needsUpdate=true;
+    if(skinRefs.inner && skinRefs.inner.geometry.attributes.position){
+      skinRefs.inner.geometry.attributes.position.array.set(skinArr);
+      skinRefs.inner.geometry.attributes.position.needsUpdate=true;
+      skinRefs.inner.geometry.computeVertexNormals();
+    }
 
-    if(!d.drag)d.setRY(d.rY+.00035);
+    if(!d.drag)d.setRY(d.rY+.0007);
     scene.rotation.x=d.rX;scene.rotation.y=d.rY+t;
     camera.position.z+=(d.z-camera.position.z)*.08;
     renderer.render(scene,camera);
   })();
 })();
 </script>
+
+<script>
+// ── THEME TOGGLE ──────────────────────────────────────────────────
+let isDark = true;
+function toggleTheme(){
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  const btn = document.getElementById('theme-btn');
+  if(btn) btn.textContent = isDark ? 'Light' : 'Dark';
+  const col = isDark ? 0x02020a : 0xf4f4fc;
+  if(window._renderers) window._renderers.forEach(r => r.setClearColor(col, 1));
+  if(window._scenes) window._scenes.forEach(s => { if(s.fog) s.fog.color.setHex(col); });
+  // Update body bg
+  document.body.style.background = isDark ? '' : '#f4f4fc';
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ── SUPABASE REALTIME CONNECTION ───────────────────────────────────
+// ── SUPABASE REALTIME ──────────────────────────────────────────────
 const SUPA_URL = 'https://vthnydupyvlnckvxicpk.supabase.co';
 const SUPA_KEY = 'sb_publishable_Na4PlwjpkYnopMlVoJAjpw_qVqtmst9';
-
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// Subscribe to new state rows
+
+
+
+function updateLiveState(s){
+  // Update dials from live data
+  dialState[0] = Math.max(-10, Math.min(10, s.inertia     || 0));
+  dialState[1] = Math.max(-10, Math.min(10, s.tension     || 0));
+  dialState[2] = Math.max(-10, Math.min(10, s.compression || 0));
+  dialState[3] = Math.max(-10, Math.min(10, s.expansion   || 0));
+  dialState[4] = Math.max(-10, Math.min(10, s.turbulence  || 0));
+  dialState[5] = Math.max(-10, Math.min(10, s.memory      || 0));
+
+  for(let i=0;i<6;i++){
+    const el = document.getElementById(`di${i}`);
+    if(el) el.value = dialState[i];
+    refreshDial(i);
+  }
+
+  // Update state label
+  const lbl = document.getElementById('sim-lbl');
+  if(lbl){
+    const regime = s.regime || 'nominal';
+    const desc   = REGIME_DESC[regime] || 'Structural activity';
+    lbl.textContent = `BTC · Epoch ${s.epoch} · ${regime} · E:${s.energy}`;
+  }
+
+  // Notify on regime change
+  if(lastRegime && lastRegime !== s.regime){
+    const notif = document.createElement('div');
+    notif.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(102,34,255,.9);color:#e0e0f0;font-family:Space Mono,monospace;font-size:10px;letter-spacing:.15em;padding:10px 20px;border-radius:3px;z-index:999;pointer-events:none;';
+    notif.textContent = `Regime → ${s.regime.replace(/_/g,' ')}`;
+    document.body.appendChild(notif);
+    setTimeout(()=>notif.remove(), 4000);
+  }
+  lastRegime = s.regime;
+}
+
 supa
-  .channel('states')
+  .channel('live-btc')
   .on('postgres_changes', {
     event: 'INSERT',
     schema: 'public',
     table: 'states',
     filter: 'asset=eq.BTC'
   }, (payload) => {
-    const s = payload.new;
-
-    // Map live state to dial positions
-    dialState[0] = Math.max(-10, Math.min(10, s.inertia));
-    dialState[1] = Math.max(-10, Math.min(10, s.tension));
-    dialState[2] = Math.max(-10, Math.min(10, s.compression));
-    dialState[3] = Math.max(-10, Math.min(10, s.expansion));
-    dialState[4] = Math.max(-10, Math.min(10, s.turbulence));
-    dialState[5] = Math.max(-10, Math.min(10, s.memory));
-
-    // Update dial visuals
-    for (let i = 0; i < 6; i++) {
-      document.getElementById(`di${i}`).value = dialState[i];
-      refreshDial(i);
-    }
-
-    refreshLbl();
-
-    // Update state label with live data
-    const lbl = document.getElementById('sim-lbl');
-    if (lbl) {
-      lbl.textContent = `BTC · Epoch ${s.epoch} · ${s.regime} · E:${s.energy}`;
-    }
-
-    console.log(`Live epoch ${s.epoch} | ${s.shape_id} | ${s.regime}`);
+    updateLiveState(payload.new);
   })
   .subscribe();
 
-console.log('SupraScope live data connected');
+console.log('SupraScope live · BTC · connected');
 </script>
+
 </body>
 </html>
