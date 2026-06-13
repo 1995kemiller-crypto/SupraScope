@@ -613,6 +613,7 @@ function buildScene(scene,forSim){
 }
 
 // ── HERO ───────────────────────────────────────────────────────────
+if(!SPRITE_TEX) SPRITE_TEX = makeSprite();
 (function(){
   const{renderer,scene,camera}=makeRenderer('hero-canvas',null);
   window._renderers.push(renderer);
@@ -818,6 +819,7 @@ const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
     camera.position.z+=(d.z-camera.position.z)*.08;
     renderer.render(scene,camera);
   })();
+})();
 </script>
 
 <script>
@@ -893,9 +895,6 @@ supa
 
 console.log('SupraScope live · BTC · connected');
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
