@@ -1,0 +1,4 @@
+websockets
+supabase
+python-dotenv
+pytrends
