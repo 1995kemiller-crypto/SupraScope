@@ -141,6 +141,7 @@ nav{
   position:relative;aspect-ratio:4/3;
   background:var(--canvas-bg);border-radius:8px;
   overflow:hidden;cursor:grab;border:1px solid #1a1a3a;
+  min-height:300px;
 }
 #sim-wrap:active{cursor:grabbing}
 #sim-canvas{width:100%;height:100%;display:block}
@@ -608,9 +609,6 @@ function updateRegimeBanner(s){
     label.style.color = e2<1.5?'#666688':e2<3?'#7733cc':e2<5?'#cc6600':'#cc2200';
   }
   if(desc) desc.textContent = REGIME_DESC[s.regime]||'Structural activity';
-  const label = document.getElementById('regime-label');
-  const desc  = document.getElementById('regime-desc');
-
 
 }
 
@@ -1049,7 +1047,16 @@ function buildScene(scene,forSim){
 
 // ── SIMULATOR ──────────────────────────────────────────────────────
 (function(){
-  const{renderer,scene,camera}=makeRenderer('sim-canvas','sim-wrap');
+  const{renderer:simRenderer,scene:simScene,camera:simCamera}=makeRenderer('sim-canvas','sim-wrap');
+  const renderer=simRenderer,scene=simScene,camera=simCamera;
+  window._renderers.push(renderer);
+  window._scenes.push(scene);
+  // Force size after layout settles
+  requestAnimationFrame(()=>{
+    const w=document.getElementById('sim-wrap').offsetWidth;
+    const h=document.getElementById('sim-wrap').offsetHeight;
+    if(w>0&&h>0){ renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+  });
   camera.position.set(0,.8,2.8);
 
   // Mutable scene refs — replaced on quality rebuild
