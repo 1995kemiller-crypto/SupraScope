@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupraScope — Agent Readability Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔭</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#06081a;--panel:#0c0f24;--rim:rgba(255,255,255,.09);
+--cyan:#33ccee;--cyan-dim:rgba(51,204,238,.14);
+--amber:#e0a33c;--amber-dim:rgba(224,163,60,.12);
+--text:#eef1ff;--text2:rgba(238,241,255,.62);--text3:rgba(238,241,255,.36);
+--mono:'Space Mono',monospace;--sans:'Space Grotesk',sans-serif;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100%}
+body{padding:0 0 80px}
+a{color:var(--cyan);text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--rim)}
+.nav-logo{font-family:var(--mono);font-size:13px;letter-spacing:.2em}
+.nav-logo b{color:var(--cyan)}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--text3);text-transform:uppercase}
+.nav-back:hover{color:var(--text)}
+
+header{padding:30px 0 6px}
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--cyan);text-transform:uppercase}
+h1{font-size:clamp(24px,3.4vw,40px);font-weight:600;letter-spacing:-.02em;margin:10px 0 12px;max-width:20ch;line-height:1.08}
+.thesis{font-size:15px;color:var(--text2);max-width:64ch;line-height:1.55}
+.thesis b{color:var(--text);font-weight:500}
+
+.step-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--text3);text-transform:uppercase;margin:38px 0 12px;display:flex;align-items:center;gap:10px}
+.step-lbl::before{content:'';width:18px;height:1px;background:var(--cyan)}
+
+.moments{display:flex;gap:8px;flex-wrap:wrap}
+.moment{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--text2);background:var(--panel);border:1px solid var(--rim);padding:9px 14px;border-radius:7px;cursor:pointer;transition:all .15s}
+.moment:hover{color:var(--text);border-color:rgba(255,255,255,.25)}
+.moment.active{background:var(--cyan);color:#04121a;border-color:var(--cyan);font-weight:700}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+.col{background:var(--panel);border:1px solid var(--rim);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.col-head{padding:13px 18px;border-bottom:1px solid var(--rim);display:flex;align-items:center;justify-content:space-between}
+.col-tag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+.col-sub{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--text3);text-transform:uppercase}
+.col.raw{border-top:2px solid var(--amber)}
+.col.raw .col-tag{color:var(--amber)}
+.col.struct{border-top:2px solid var(--cyan)}
+.col.struct .col-tag{color:var(--cyan)}
+.col-body{padding:18px;font-size:13.5px;line-height:1.6;color:var(--text2);flex:1;white-space:pre-wrap}
+.col.raw .col-body{font-family:var(--mono);font-size:12px;color:var(--amber);opacity:.92}
+.kv{display:flex;justify-content:space-between;gap:18px;padding:3px 0;border-bottom:1px dotted rgba(255,255,255,.06)}
+.kv span:last-child{color:#fff;font-weight:700}
+
+.task{margin-top:8px}
+.task textarea{width:100%;background:var(--panel);border:1px solid var(--rim);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:14px;padding:14px 16px;resize:vertical;min-height:70px;line-height:1.5}
+.task textarea:focus{outline:none;border-color:var(--cyan)}
+.runbar{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+button.run{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--cyan);background:transparent;border:1px solid var(--cyan);padding:12px 24px;border-radius:8px;cursor:pointer;transition:all .15s}
+button.run:hover{background:var(--cyan);color:#04121a}
+button.run:disabled{opacity:.45;cursor:not-allowed}
+.hint{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.04em;max-width:42ch;line-height:1.4}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.ans{background:var(--panel);border:1px solid var(--rim);border-radius:12px;overflow:hidden;min-height:120px;display:flex;flex-direction:column}
+.ans.raw{border-top:2px solid var(--amber)}
+.ans.struct{border-top:2px solid var(--cyan)}
+.ans-head{padding:11px 16px;border-bottom:1px solid var(--rim);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ans.raw .ans-head{color:var(--amber)}
+.ans.struct .ans-head{color:var(--cyan)}
+.ans-tag{font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:2px 7px;border-radius:20px;border:1px solid var(--rim);color:var(--text3)}
+.ans-tag.live{color:var(--cyan);border-color:var(--cyan)}
+.ans-body{padding:16px 18px;font-size:13.5px;line-height:1.62;color:var(--text);flex:1;white-space:pre-wrap}
+
+.verdict{margin-top:16px;background:linear-gradient(180deg,rgba(51,204,238,.06),transparent);border:1px solid var(--rim);border-left:2px solid var(--cyan);border-radius:10px;padding:16px 20px}
+.verdict-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--cyan);text-transform:uppercase;margin-bottom:8px}
+.verdict-body{font-size:13.5px;line-height:1.6;color:var(--text);white-space:pre-wrap}
+
+.spinner{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.note{margin-top:36px;border-top:1px solid var(--rim);padding-top:18px;font-size:12.5px;color:var(--text3);line-height:1.6;max-width:80ch}
+.note b{color:var(--text2);font-weight:600}
+.note code{font-family:var(--mono);font-size:11px;color:var(--cyan);background:var(--cyan-dim);padding:1px 5px;border-radius:3px}
+
+@media(max-width:780px){
+.cols,.answers{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+<a href="/" class="nav-logo">Supra<b>Scope</b></a>
+<a href="/" class="nav-back">← Back to the object</a>
+</nav>
+
+<header>
+<div class="eyebrow">Agent Readability Lab</div>
+<h1>The same moment. One feed an agent can reason with.</h1>
+<p class="thesis">Every agent reads markets through flat numbers — price, volume, RSI. SupraScope turns the same moment into a <b>structural narrative</b>: memory layers, layer divergence, deviation fingerprints, topology events. Below, the same market moment is handed to an agent both ways, with the same question. A neutral referee — told nothing about which feed is which — judges whose reasoning is sharper.</p>
+</header>
+
+<div class="step-lbl">Pick a market moment</div>
+<div class="moments" id="moments"></div>
+
+<div class="step-lbl">The same moment, described two ways</div>
+<div class="cols">
+<div class="col raw">
+<div class="col-head"><span class="col-tag">Raw feed</span><span class="col-sub">what agents get today</span></div>
+<div class="col-body" id="raw-view"></div>
+</div>
+<div class="col struct">
+<div class="col-head"><span class="col-tag">Structural narrative</span><span class="col-sub">SupraScope API output</span></div>
+<div class="col-body" id="struct-view"></div>
+</div>
+</div>
+
+<div class="step-lbl">Ask both the same question</div>
+<div class="task">
+<textarea id="task">You are an autonomous trading agent monitoring ETH. Based only on the briefing below, describe what is happening in the market right now and state specifically what you would watch for or act on next. Be concrete and decisive — skip generic disclaimers.</textarea>
+<div class="runbar">
+<button class="run" id="run">Run it live</button>
+<span class="hint" id="hint">Generates fresh responses + a blind referee verdict. Runs live inside Claude; on the public site it shows the example responses below.</span>
+</div>
+</div>
+
+<div class="step-lbl">Two agents, same moment</div>
+<div class="answers">
+<div class="ans raw">
+<div class="ans-head"><span>Agent fed the raw feed</span><span class="ans-tag" id="raw-tag">Example</span></div>
+<div class="ans-body" id="raw-ans"></div>
+</div>
+<div class="ans struct">
+<div class="ans-head"><span>Agent fed the structural narrative</span><span class="ans-tag" id="struct-tag">Example</span></div>
+<div class="ans-body" id="struct-ans"></div>
+</div>
+</div>
+
+<div class="verdict">
+<div class="verdict-lbl">Neutral referee — which briefing produced better reasoning</div>
+<div class="verdict-body" id="verdict-body"></div>
+</div>
+
+<div class="note">
+<b>What you're looking at.</b> The structural panel is generated by <code>narrate(state)</code> — the same transform that powers the SupraScope agent API, run on a row from the live <code>states</code> table. The example agent responses are representative; <b>Run it live</b> generates fresh ones and a blind referee verdict in real time. The raw-feed responses aren't strawmen — they're a capable agent doing its honest best with the only data it has. The structural agent reasons further because the briefing carries context the flat numbers structurally cannot.
+</div>
+</div>
+
+<script>
+// ── SAMPLE STATES (shaped to the real `states` schema) ──────────────
+const MOMENTS = [
+{ key:'nominal', label:'Nominal drift',
+s:{ asset:'ETH', epoch:1402, raw_price:3188.40, regime:'nominal', regime_duration:74, topology_event:null, shape_id:'E-3a91', rarity_score:0.08,
+inertia:1.2, tension:-0.4, compression:0.6, expansion:0.9, turbulence:-0.3, memory:1.1, energy:2.1,
+price_signal:0.8, micro_signal:-0.5, deriv_signal:0.4, chain_signal:1.2, social_signal:-0.2, macro_signal:0.6,
+dev_from_24h:0.4, dev_from_3d:-0.9, dev_from_7d:1.3 } },
+{ key:'tension', label:'Rising tension',
+s:{ asset:'ETH', epoch:1638, raw_price:3061.10, regime:'high_tension', regime_duration:11, topology_event:null, shape_id:'E-7c20', rarity_score:0.41,
+inertia:-1.8, tension:6.4, compression:3.1, expansion:-2.2, turbulence:2.0, memory:-0.6, energy:5.8,
+price_signal:2.1, micro_signal:-4.0, deriv_signal:5.5, chain_signal:-1.0, social_signal:1.8, macro_signal:-2.4,
+dev_from_24h:3.2, dev_from_3d:4.1, dev_from_7d:2.0 } },
+{ key:'turbulent', label:'Turbulent decohesion',
+s:{ asset:'ETH', epoch:1701, raw_price:2944.75, regime:'turbulent', regime_duration:4, topology_event:null, shape_id:'E-9f4d', rarity_score:0.63,
+inertia:-3.4, tension:4.2, compression:1.0, expansion:1.5, turbulence:7.1, memory:-2.3, energy:7.9,
+price_signal:-3.5, micro_signal:6.2, deriv_signal:4.8, chain_signal:-2.1, social_signal:5.0, macro_signal:-1.2,
+dev_from_24h:5.6, dev_from_3d:3.4, dev_from_7d:2.8 } },
+{ key:'bloom', label:'Bloom — energy ignition',
+s:{ asset:'ETH', epoch:1844, raw_price:3402.90, regime:'expanding_coherent', regime_duration:6, topology_event:'bloom', shape_id:'E-2b18', rarity_score:0.79,
+inertia:0.4, tension:1.1, compression:-3.0, expansion:8.2, turbulence:0.8, memory:0.5, energy:8.6,
+price_signal:7.0, micro_signal:5.5, deriv_signal:6.1, chain_signal:6.8, social_signal:7.4, macro_signal:3.2,
+dev_from_24h:6.9, dev_from_3d:5.5, dev_from_7d:4.1 } },
+{ key:'eerie', label:'Eerie stillness — pre-event',
+s:{ asset:'ETH', epoch:1990, raw_price:3120.05, regime:'eerie_coherent', regime_duration:9, topology_event:null, shape_id:'E-0d77', rarity_score:0.91,
+inertia:4.6, tension:-0.6, compression:5.9, expansion:-5.2, turbulence:-6.4, memory:3.8, energy:1.2,
+price_signal:-0.4, micro_signal:-5.8, deriv_signal:-1.2, chain_signal:-4.9, social_signal:-6.1, macro_signal:-0.8,
+dev_from_24h:1.1, dev_from_3d:0.6, dev_from_7d:0.9 } }
+];
+
+// ── CURATED EXAMPLE RESPONSES (representative; live run overwrites) ──
+const EXAMPLES = {
+nominal:{
+raw:"Price is essentially flat (+0.4% on the day), volume is only modestly above average, and RSI sits around 52 — squarely neutral. There's no momentum to lean on in either direction. I'd hold current positioning and wait; nothing here justifies adding or cutting risk.",
+struct:"The object is sitting deep in its learned center: regime is \"nominal,\" settled for 74 epochs, nominal gravity strong, and the fingerprint rarity is 0.08 — a configuration it has felt many times. All six layers are quiet and aligned near baseline. That's not an absence of information; it's a confirmed low-energy equilibrium. I'd hold — but specifically because the structure is stable, not just because price is flat — keep stops wide, and watch for the first layer to break ranks. That divergence, not a price move, would be the early tell.",
+verdict:"Briefing B. Both land on \"hold,\" but B distinguishes a stable equilibrium from a mere absence of signal and names exactly what would change its mind. A only sees a flat tape."
+},
+tension:{
+raw:"Down about 3% over 24h on elevated volume (+50%), with RSI sliding toward 40 and funding slightly positive. Reads like early distribution or weakness. I'd tighten stops and consider trimming longs into the move.",
+struct:"Tension is strong (+6.4) with compression building (+3.1) while expansion turns negative — opposing forces are stretching the structure as energy leaves. The key tell is layer disagreement: micro_signal is −4.0 (order book thinning) against deriv_signal +5.5 (positioning still building). Those streams are pulling opposite ways, which is the classic setup before a violent resolution. The regime is only 11 epochs old and inertia is negative, so the object is easily deformed right now. I'd treat this as pre-break instability rather than orderly weakness — reduce size into the disagreement and wait for the layers to resolve instead of guessing direction.",
+verdict:"Briefing B. A reads generic weakness; B identifies the specific microstructure-vs-derivatives divergence and the low-inertia fragility that make this a pre-break setup, and sizes accordingly."
+},
+turbulent:{
+raw:"High volatility — price off ~5.6% on the day, volume sharply up, RSI whipping into the low 30s. Oversold reading suggests a possible bounce, but it's choppy. I'd wait for stabilization before considering a long.",
+struct:"Turbulence is extreme (+7.1) with negative inertia (−3.4) and memory pulling against recent structure (−2.3): coherence has broken down and the object has lost its anchor. micro_signal (+6.2) and social (+5.0) are spiking while chain_signal is negative (−2.1) — attention and flow are frantic but on-chain conviction isn't following. This is decoherence, not a clean oversold dip. \"Oversold\" assumes a stable mean to revert to, and during decoherence there isn't one. I'd stand aside entirely until turbulence subsides and the layers re-cohere; fading this is a low-quality trade regardless of RSI.",
+verdict:"Briefing B. A's \"oversold bounce\" is exactly the trap — B recognizes there's no stable mean to revert to mid-decoherence and correctly refuses the trade."
+},
+bloom:{
+raw:"Strong up move — price +6.9% on heavy volume, RSI pushing into the 70s (overbought). Momentum is clearly positive but the RSI says caution. I'd ride existing longs with a trailing stop and avoid chasing here.",
+struct:"This is a Bloom topology event — every layer expanded outward at once: expansion +8.2, all six signals positive, compression negative. The simultaneity is the signal. It isn't one stream dragging price; it's coordinated energy entering across price, micro, derivs, chain, and social together — narrative ignition. Rarity is 0.79, so the object hasn't been here often, and broad-coherence blooms tend to carry follow-through, unlike single-layer spikes. I'd stay long and add on the first orderly pullback rather than fear the \"overbought\" RSI — the structure says this is participation, not exhaustion.",
+verdict:"Briefing B. A treats high RSI as a reason for caution; B reads the all-layer coherence of a Bloom as coordinated ignition with follow-through, and takes the better-supported, more decisive stance."
+},
+eerie:{
+raw:"Quiet session — price flat (+1.1%), volume unremarkable, RSI mid-range near 50. Nothing actionable on the tape. I'd hold and move on; there's no setup here.",
+struct:"This is the most dangerous reading on the board precisely because the tape looks boring. Compression is high (+5.9) with strong negative expansion (−5.2) and — unusually — negative turbulence (−6.4): an unnatural stillness, the object collapsing toward its core in silence. micro (−5.8), chain (−4.9), and social (−6.1) have all withdrawn together while inertia is high (+4.6), the object frozen. Rarity is 0.91 — near-novel territory, a fingerprint it has almost never felt. This is the textbook \"eerie coherent\" pre-event signature: liquidity voiding ahead of a move. I'd cut exposure and tighten risk now, while it's still quiet — not because price did anything, but because the structure is coiled.",
+verdict:"Briefing B, decisively. The raw feed sees a flat, ignorable tape; the structural briefing sees coiled pre-event compression with all participation withdrawn and a 0.91-rare fingerprint — and acts before the move instead of after. This is the difference the instrument is built to surface."
+}
+};
+
+// ── RAW FEED VIEW ───────────────────────────────────────────────────
+function rawView(s){
+const chg=(s.dev_from_24h*0.9).toFixed(2);
+const vol=(40+s.turbulence*6+s.expansion*4).toFixed(0);
+const rsi=Math.max(8,Math.min(92,50+s.expansion*3-s.compression*3+s.price_signal*2)).toFixed(0);
+const funding=(s.deriv_signal*0.004).toFixed(3);
+const rows=[
+['Price','$'+s.raw_price.toFixed(2)],['24h change',(chg>=0?'+':'')+chg+'%'],
+['Volume vs avg','+'+vol+'%'],['RSI (14)',rsi],['Funding rate',(funding>=0?'+':'')+funding+'%'],['—','—'],
+['price_signal',s.price_signal.toFixed(1)],['micro_signal',s.micro_signal.toFixed(1)],
+['deriv_signal',s.deriv_signal.toFixed(1)],['chain_signal',s.chain_signal.toFixed(1)],
+['social_signal',s.social_signal.toFixed(1)],['macro_signal',s.macro_signal.toFixed(1)]];
+return rows.map(([k,v])=> k==='—'
+?'<div class="kv" style="border:none;opacity:.3">&nbsp;</div>'
+:`<div class="kv"><span>${k}</span><span>${v}</span></div>`).join('');
+}
+
+// ── narrate(state) — the structural narrative transform ─────────────
+function band(v){const a=Math.abs(v);if(a<1)return'flat';if(a<3)return'mild';if(a<6)return'moderate';if(a<8.5)return'strong';return'extreme';}
+function signWord(v,neg,pos){return v<0?neg:pos;}
+function narrate(s){
+const lines=[];
+const reactive=[];
+if(Math.abs(s.turbulence)>=1)reactive.push(`${band(s.turbulence)} ${signWord(s.turbulence,'order consolidating (negative turbulence — unusual calm)','coherence breaking down')}`);
+if(Math.abs(s.expansion)>=1)reactive.push(`${band(s.expansion)} ${signWord(s.expansion,'contraction — energy leaving','expansion — energy entering')}`);
+if(Math.abs(s.tension)>=1)reactive.push(`${band(s.tension)} tension — opposing forces ${s.tension>0?'pulling structure apart':'relaxed'}`);
+if(Math.abs(s.compression)>=1)reactive.push(`${band(s.compression)} compression toward center`);
+lines.push('SHORT MEMORY (reactive): '+(reactive.length?reactive.join('; '):'quiet across all axes')+'.');
+const dur=s.regime_duration;
+const settled=dur>40?'deeply established':dur>15?'settled':dur>6?'recently formed':'just entered';
+const grav=(s.inertia>2)?'nominal gravity strong — object resists change':(s.inertia<-2)?'nominal gravity weakening — object easily deformed':'nominal gravity neutral';
+lines.push(`MID MEMORY (regime): "${s.regime.replace(/_/g,' ')}", ${settled} (${dur} epochs). ${grav}.`);
+const fam=s.rarity_score>0.8?'no strong historical match — novel territory':s.rarity_score>0.55?'a rare configuration — seen only a few times before':s.rarity_score>0.3?'a familiar but uncommon fingerprint':'a well-worn fingerprint the object has felt many times';
+const mem=Math.abs(s.memory)>=2?` Long memory is ${s.memory>0?'actively echoing a prior form':'pulling against recent structure'}.`:'';
+lines.push(`LONG MEMORY (constitutional): this deviation fingerprint is ${fam} (rarity ${s.rarity_score.toFixed(2)}).${mem}`);
+const sig={price:s.price_signal,micro:s.micro_signal,deriv:s.deriv_signal,chain:s.chain_signal,social:s.social_signal,macro:s.macro_signal};
+const pos=Object.entries(sig).filter(([,v])=>v>=3).map(([k])=>k);
+const neg=Object.entries(sig).filter(([,v])=>v<=-3).map(([k])=>k);
+let div='Layers broadly aligned near baseline.';
+if(pos.length&&neg.length)div=`Layer divergence: ${pos.join(', ')} pushing positive while ${neg.join(', ')} pull negative — the streams disagree.`;
+else if(pos.length>=3)div=`Coherent positive: ${pos.join(', ')} lit up together.`;
+else if(neg.length>=3)div=`Coherent withdrawal: ${neg.join(', ')} in retreat together.`;
+else if(neg.length)div=`${neg.join(', ')} in withdrawal (${neg.map(k=>sig[k].toFixed(1)).join(', ')}) against an otherwise quiet field.`;
+else if(pos.length)div=`${pos.join(', ')} active (${pos.map(k=>sig[k].toFixed(1)).join(', ')}) against an otherwise quiet field.`;
+lines.push('LAYER FIELD: '+div);
+const dist=(s.dev_from_24h+s.dev_from_3d+s.dev_from_7d)/3;
+const distW=dist>4?'significant and elevated across all horizons':dist>2?'moderate':'near the learned center';
+lines.push(`DISTANCE FROM NOMINAL: ${distW} (24h ${s.dev_from_24h.toFixed(1)}, 3d ${s.dev_from_3d.toFixed(1)}, 7d ${s.dev_from_7d.toFixed(1)}).`);
+if(s.topology_event){
+const desc={bloom:'BLOOM — every layer expanded outward at once. Price discovery / narrative ignition.',rupture:'RUPTURE — layers violently decohered. Connector structure snapped.',fold:'FOLD — an axis inverted sign. Regime reversal forming.',collapse:'COLLAPSE — all layers compressed toward center simultaneously. Liquidity void / pre-event stillness.'}[s.topology_event];
+lines.push('\u26a0 TOPOLOGY EVENT — '+(desc||s.topology_event));
+}
+return lines.join('\n\n');
+}
+
+// ── STATE / RENDER ──────────────────────────────────────────────────
+let current=MOMENTS[4]; // open on the headline pre-event moment
+
+function renderMoment(){
+document.getElementById('raw-view').innerHTML=rawView(current.s);
+document.getElementById('struct-view').textContent=narrate(current.s);
+showExamples();
+}
+function showExamples(){
+const ex=EXAMPLES[current.key];
+document.getElementById('raw-ans').textContent=ex.raw;
+document.getElementById('struct-ans').textContent=ex.struct;
+document.getElementById('verdict-body').textContent=ex.verdict+'\n\n(A = raw feed · B = SupraScope structural narrative)';
+document.getElementById('raw-tag').textContent='Example';document.getElementById('raw-tag').className='ans-tag';
+document.getElementById('struct-tag').textContent='Example';document.getElementById('struct-tag').className='ans-tag';
+}
+function buildMoments(){
+const c=document.getElementById('moments');
+MOMENTS.forEach(m=>{
+const b=document.createElement('button');
+b.className='moment'+(m.key===current.key?' active':'');
+b.textContent=m.label;
+b.onclick=()=>{current=m;document.querySelectorAll('.moment').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderMoment();};
+c.appendChild(b);
+});
+}
+
+// ── LIVE MODEL CALLS (work inside Claude; degrade on static site) ───
+async function ask(prompt){
+const res=await fetch("https://api.anthropic.com/v1/messages",{
+method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+if(!res.ok)throw new Error(res.status);
+const data=await res.json();
+return data.content.map(b=>b.type==='text'?b.text:'').join('').trim();
+}
+
+document.getElementById('run').onclick=async()=>{
+const btn=document.getElementById('run');
+const task=document.getElementById('task').value.trim();
+const raw=document.getElementById('raw-ans'),str=document.getElementById('struct-ans');
+const vBody=document.getElementById('verdict-body'),hint=document.getElementById('hint');
+btn.disabled=true;btn.textContent='Running…';
+raw.innerHTML='<span class="spinner"></span>';str.innerHTML='<span class="spinner"></span>';vBody.innerHTML='<span class="spinner"></span>';
+const rawPrompt=task+'\n\nBRIEFING (market data feed):\n'+document.getElementById('raw-view').innerText;
+const strPrompt=task+'\n\nBRIEFING (SupraScope structural narrative):\n'+narrate(current.s);
+try{
+const [rawAns,strAns]=await Promise.all([ask(rawPrompt),ask(strPrompt)]);
+raw.textContent=rawAns;str.textContent=strAns;
+document.getElementById('raw-tag').textContent='Live';document.getElementById('raw-tag').className='ans-tag live';
+document.getElementById('struct-tag').textContent='Live';document.getElementById('struct-tag').className='ans-tag live';
+const refPrompt='Two trading agents were given the same market moment described two different ways, then asked what to watch for or act on. Judge purely on the quality of reasoning: which response is more dimensional, context-aware, and actionable, and why? Two or three sentences. Name the winner as "Briefing A" or "Briefing B".\n\n--- BRIEFING A RESPONSE ---\n'+rawAns+'\n\n--- BRIEFING B RESPONSE ---\n'+strAns;
+const verdict=await ask(refPrompt);
+vBody.textContent=verdict+'\n\n(A = raw feed · B = SupraScope structural narrative)';
+}catch(e){
+showExamples();
+hint.textContent='Live runs need the lab open inside Claude (or a backend proxy on the public site). Showing the example responses instead.';
+}
+btn.disabled=false;btn.textContent='Run it live';
+};
+
+buildMoments();
+renderMoment();
+</script>
+</body>
+</html>
