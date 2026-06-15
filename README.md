@@ -4,6 +4,8 @@
 
 **supra-scope.com**
 
+**Live now —** BTC and ETH render as real-time geometric objects at supra-scope.com, each driven by a physics engine that logs structural state on a fixed epoch cadence (~15s), 24/7. Months of that history are accumulating in a store nobody else has.
+
 ---
 
 ## What it is
@@ -30,7 +32,7 @@ The patterns reveal themselves. SupraScope makes them visible.
 
 **Emergent pattern.** Patterns are not designed in. They crystallize from the relationship between layers. The observer's nervous system does the rest. Pre-linguistic pattern recognition. The shape is legible before it is articulable.
 
-**Agent readable.** The API exposes structural narrative, not geometry. An agent receives memory layer divergence, deviation fingerprints, and topology events — and reasons about it with its own intelligence. A new primitive for automated cognition.
+**Agent readable.** The API surface exposes structural narrative, not geometry. An agent receives memory layer divergence, deviation fingerprints, and topology events — and reasons about it with its own intelligence. A new primitive for automated cognition.
 
 ---
 
@@ -38,27 +40,27 @@ The patterns reveal themselves. SupraScope makes them visible.
 
 Each quantity runs on the signed spectrum. They interact through the physics rule set — not through shared raw data.
 
-| Quantity | What it encodes | Geometric effect |
-|---|---|---|
-| Inertia | Resistance to regime change | Object moves slowly, resists deformation |
-| Tension | Opposing forces pulling structure apart | Object stretches, edges elongate |
-| Compression | Structure collapsing toward a point | Vertices pull inward, volume shrinks |
-| Expansion | Energy entering the system | Object inflates, rotation accelerates |
-| Turbulence | Order breakdown, coherence loss | Surface roughens, connectors fractal |
-| Memory | Past states shaping current geometry | Ghost topology echoes prior form |
+| Quantity    | What it encodes                         | Geometric effect                         |
+| ----------- | --------------------------------------- | ---------------------------------------- |
+| Inertia     | Resistance to regime change             | Object moves slowly, resists deformation |
+| Tension     | Opposing forces pulling structure apart | Object stretches, edges elongate         |
+| Compression | Structure collapsing toward a point     | Vertices pull inward, volume shrinks     |
+| Expansion   | Energy entering the system              | Object inflates, rotation accelerates    |
+| Turbulence  | Order breakdown, coherence loss         | Surface roughens, connectors fractal     |
+| Memory      | Past states shaping current geometry    | Ghost topology echoes prior form         |
 
 ---
 
 ## Data streams
 
-| Stream | Sources | Signed range |
-|---|---|---|
-| Price | OHLCV, spot, perp, basis, funding, cross-exchange spread | −10 withdrawal → +10 active conviction |
-| Microstructure | Order book depth, trade flow, bid-ask delta, liquidations | −10 vacuum → +10 aggressive flow |
-| Derivatives | OI velocity, vol surface, skew, put/call, gamma exposure | −10 unwind → +10 conviction build |
-| On-chain | Wallet flows, exchange inflows, whale moves, new addresses | −10 outflow → +10 accumulation |
-| Social | Mention velocity, sentiment, narrative bifurcation, consensus age | −10 silence → +10 viral attention |
-| Macro | DXY, rates, dominance, event calendar, cross-asset correlation | −10 risk-off → +10 risk-on |
+| Stream         | Sources                                                           | Signed range                           |
+| -------------- | ----------------------------------------------------------------- | -------------------------------------- |
+| Price          | OHLCV, spot, perp, basis, funding, cross-exchange spread          | −10 withdrawal → +10 active conviction |
+| Microstructure | Order book depth, trade flow, bid-ask delta, liquidations         | −10 vacuum → +10 aggressive flow       |
+| Derivatives    | OI velocity, vol surface, skew, put/call, gamma exposure          | −10 unwind → +10 conviction build      |
+| On-chain       | Wallet flows, exchange inflows, whale moves, new addresses        | −10 outflow → +10 accumulation         |
+| Social         | Mention velocity, sentiment, narrative bifurcation, consensus age | −10 silence → +10 viral attention      |
+| Macro          | DXY, rates, dominance, event calendar, cross-asset correlation    | −10 risk-off → +10 risk-on             |
 
 ---
 
@@ -78,29 +80,6 @@ Each topology event leaves a structural fingerprint in long memory. The object h
 
 ---
 
-## Architecture
-
-```
-Supra oracle layer (native price feeds, sub-second finality)
-        ↓
-Offchain physics engine (Rust — ODE solver, social ingest, state computation)
-        ↓
-OnChain state contract (Move — ObservatoryState struct, verifiable, composable)
-        ↓
-┌─────────────────────────────────────────┐
-│  Web renderer    │  State API  │  Agents │
-│  Three.js        │  REST + WS  │  Narrative│
-│  4D → 3D         │  Snapshots  │  Structural│
-│  morphing field  │  Delta stream│  Briefing │
-└─────────────────────────────────────────┘
-```
-
-**Why Supra.** Native oracle infrastructure means no bridge latency. Sub-second finality means the object feels alive. The Move VM's resource model means `ObservatoryState` is a first-class onchain primitive — readable and composable by any other contract.
-
-**Why offchain compute.** The ODE solver, Hawkes process estimator, and social ingestion pipeline run offchain. The chain holds the result — verified, signed, permanent. The physics decides the epoch length, not the block time.
-
----
-
 ## The object as agent primitive
 
 Every agent consuming market data today does so through flat numerical streams. Price, volume, RSI. It is like describing a sculpture over the phone one measurement at a time.
@@ -115,36 +94,95 @@ An agent receives:
 
 That is a qualitative structural description of a moment. An agent can reason about that. It has context, dimensionality, memory, and relationship. It is closer to how an experienced human thinks about a market than anything currently possible to encode programmatically.
 
+This is the claim the project takes most seriously, so it is being tested directly: the structural-narrative transform runs against a live model, blind-judged head to head with the raw numeric feed, to measure whether the framing actually produces better agent reasoning.
+
 ---
 
 ## Rewind
 
-The full state history is onchain. The object can be rewound to any epoch and replayed — feeling the structural character of any historical moment rather than reading about it. An observer who has replayed significant moments across multiple assets builds a perceptual vocabulary that no dashboard can replicate.
+The full state history is retained — every epoch, every asset, since the engine went live. The object can be rewound to any past epoch and replayed, so you feel the structural character of a historical moment rather than read about it. An observer who has replayed significant moments across multiple assets builds a perceptual vocabulary that no dashboard can replicate. That accumulating history is the part of the system that cannot be back-filled or copied.
+
+---
+
+## Architecture
+
+### Running today
+
+```
+Market data ingestion  (exchange feeds · on-chain · social)
+        ↓
+Physics engine — Python, one process per asset  (engine.py · engine_eth.py, on Railway)
+   six signed quantities · regime classification · topology detection · nominal gravity
+        ↓
+State store — Supabase / Postgres
+   live state + full epoch history · ~15s cadence · row-level security · indexed
+        ↓
+┌──────────────────────────────────────────────────────┐
+│  Web renderer          │  Realtime feed   │  Narrative   │
+│  Three.js · 4D→3D       │  Supabase WS     │  transform    │
+│  live morphing object  │  per-epoch push  │  narrate()    │
+└──────────────────────────────────────────────────────┘
+```
+
+The renderer pulls live state over a Supabase realtime channel and deforms the object per epoch; the same state rows feed the structural-narrative transform.
+
+### Target architecture
+
+The current stack proves the instrument. The destination moves the physics and the state on-chain:
+
+```
+Supra oracle feeds  →  Rust physics engine  →  Move ObservatoryState (onchain)  →  renderer · API · agents
+```
+
+**Why Supra.** Native oracle infrastructure means no bridge latency. Sub-second finality means the object feels alive. The Move VM's resource model means `ObservatoryState` becomes a first-class onchain primitive — readable and composable by any other contract.
+
+**Why offchain compute.** The ODE solver, Hawkes process estimator, and social ingestion pipeline run offchain. The chain holds the result — verified, signed, permanent. The physics decides the epoch length, not the block time.
 
 ---
 
 ## Current state
 
-- [x] Theoretical foundation complete
-- [x] Layer cohesion model defined
-- [x] Topology event vocabulary established
-- [x] Interactive preview live at supra-scope.com
-- [x] Theory document at supra-scope.com/theory.html
-- [ ] Physics engine scaffold — Rust
-- [ ] Move contract — ObservatoryState struct
-- [ ] Live data ingestion — Supra oracle + Binance WS
-- [ ] Simulation — nominal state calibration per asset
-- [ ] Agent API — structural narrative endpoint
-- [ ] Multi-asset combined objects
+### Live
+
+- BTC and ETH objects rendering in real time at supra-scope.com
+- Python physics engine computing all six quantities + regime + topology, running 24/7 per asset
+- Live market-data ingestion, structural state logged every epoch
+- Per-asset nominal baseline (BTC, ETH)
+- Full epoch history accumulating in Postgres — replayable
+- Hardened backend — row-level security, indexed latest-epoch lookups, scoped realtime publication
+- Theory document at supra-scope.com/theory.html
+
+### In progress
+
+- Structural-narrative transform (`narrate()`) — prototyped and being blind-tested against a live model; endpoint not yet deployed
+- Spec docs — API.md, CONTRACT.md, LAYERS.md, PHYSICS.md
+
+### Roadmap
+
+- `/v1/narrative` agent API — serve the transform over live history
+- Additional assets (SOL next)
+- Cross-asset comparison view
+- Physics engine ported to Rust
+- `ObservatoryState` anchored on-chain via Supra Move
+- Ingestion migrated to Supra native oracle feeds
 
 ---
 
 ## Built on
 
-- **Supra** — native oracle layer, HyperNova BFT consensus, Move VM
+### Running today
+
+- **Python** — physics engine
+- **Supabase / Postgres** — state store, realtime, full history
+- **Railway** — engine hosting
+- **Netlify** — static hosting
 - **Three.js** — WebGL rendering, 4D→3D projection
-- **Rust** — physics engine (planned)
-- **FastAPI** — state API (planned)
+
+### Target stack
+
+- **Supra** — native oracle layer, HyperNova BFT consensus, Move VM (`ObservatoryState` on-chain)
+- **Rust** — physics engine port
+- **FastAPI** — agent API
 
 ---
 
